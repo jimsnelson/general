@@ -1,3 +1,5 @@
+--08-MAY-2025 Archived Member Invoice Email - before Group Membership changes added.
+
 create or replace PROCEDURE email_member_invoices (
   p_app_oid IN NUMBER,
   p_app_user IN VARCHAR2, 
