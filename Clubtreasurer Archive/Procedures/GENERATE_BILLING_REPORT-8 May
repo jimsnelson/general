@@ -1,629 +1,241 @@
-create or replace PROCEDURE email_member_statements (
+create or replace PROCEDURE "GENERATE_BILLING_REPORT" (
   p_app_oid IN NUMBER,
-  p_app_user IN VARCHAR2, 
-  p_header_text IN VARCHAR2, --p_header_text
-  p_body_text IN VARCHAR2,
-  p_footer_text IN VARCHAR2,
-  p_include_bfwd IN VARCHAR2,
-  p_date_from IN DATE,
-  p_email_status IN VARCHAR2,
-  p_bcc_me IN VARCHAR2,
-  p_app_currency IN VARCHAR2,
-  p_exclude_option IN VARCHAR2, --Not used to include/exclude repeat emails
-  p_email_count OUT VARCHAR2,
-  p_org_email OUT VARCHAR2
+  p_app_user IN VARCHAR2,
+  p_app_mms_member_view IN VARCHAR2,
+  p_app_mms_member_sort IN VARCHAR2,
+  p_include_bfwd IN VARCHAR2 DEFAULT 'N',
+  p_include_ua IN VARCHAR2 DEFAULT 'Y', --include Unallocated
+  p_date_option IN VARCHAR2 DEFAULT 'SD',
+  p_date_from IN DATE DEFAULT '01-JAN-1900',
+  p_date_to IN DATE DEFAULT '31-DEC-2199',
+  p_invoice_status IN VARCHAR2 DEFAULT 'A',
+  p_show IN VARCHAR2 DEFAULT 'AI', --Active/Inacive Members
+  
+  p_section_id IN NUMBER DEFAULT 0,
+  p_memid IN NUMBER DEFAULT 0,
+  p_member_id IN NUMBER DEFAULT -1, -- "-1" is used when called from a multi-select page
+
+  p_section_id_N IN VARCHAR2 DEFAULT '',  -- used for Multi-select pages (MUST SET p_sectiom_id as '-1')
+  p_memid_N IN VARCHAR2 DEFAULT '',  -- used for Multi-select pages (MUST SET p_memid as '-1')
+  p_member_id_N IN VARCHAR2 DEFAULT ''  -- used for Multi-select pages (MUST SET p_member_id as '-1')
+  
+ 
 )
-
-IS  
-
- v_org_name VARCHAR2(250);
- v_org_contact VARCHAR2(100);
- v_org_email VARCHAR2(100);
- v_org_email_cc VARCHAR2(100); -- Used for separate CC
- v_email VARCHAR2(100);
-
- l_body CLOB;
- l_body_html CLOB;
-
- v_header CLOB;
- v_body CLOB;
- v_footer CLOB;
-
- v_billing_lines_table CLOB; --BILLING LINES TABLE
- v_table_row VARCHAR2(4000); -- BILLING ROWS
-
- v_address1 VARCHAR2(100);
- v_address2 VARCHAR2(100);
- v_addresstown VARCHAR2(100);
- v_addresscounty VARCHAR2(100);
- v_addresspostcode VARCHAR2(50);
- v_m_addressfull VARCHAR2(500);
-
- v_memid NUMBER;
- v_mem_map_id NUMBER;
- v_mem_name VARCHAR2(250);
- v_mem_name_expno VARCHAR(250); --Extended Payment details
- v_mem_name_vouchno VARCHAR(250); --Extended Payment details
- v_invoice_date VARCHAR2(25);
- v_bill_period VARCHAR2(100);
- v_inv_id NUMBER;
- v_inv_status VARCHAR2(100);
- v_journal_type VARCHAR2(50);
- v_jm_id NUMBER;
- v_bal_bfwd NUMBER; 
- v_due NUMBER;
- v_paid NUMBER; --payment line received
- v_bill_paid NUMBER; --billing line payment
- v_balance NUMBER;
- v_due_disp VARCHAR2(25);
- v_paid_disp VARCHAR2(25);
- v_balance_disp VARCHAR2(25);
- v_numMembers NUMBER :=0;
- v_numBillLines NUMBER :=0;
- v_bal_bfwd_disp VARCHAR(25);
- v_t_due NUMBER;
- v_t_paid NUMBER;
- v_t_balance NUMBER;
- v_t_due_disp VARCHAR2(50);
- v_t_paid_disp VARCHAR2(50);
- v_t_balance_disp VARCHAR2(50);
-
- l_content_id varchar2(100) := 'logo-image';
- l_filename varchar2(100);
- l_mime_type varchar2(100);
- l_image blob;
- v_logo_count number := 0; --check if logo exists
-
- l_id NUMBER; --Attachment 
-
-
-
+IS
 BEGIN
+  DELETE FROM REPORT_MMS_BILLING_RPT
+  WHERE OID = p_app_oid
+  AND USERNAME = p_app_user;
 
+IF  NVL(p_include_ua, 'N') <> 'UN' THEN  -- UN=Unallocated only (p185) 
 
---DBMS_OUTPUT.PUT_LINE('TEST OUTPUT'); --make sure output is on in SQL Developer
-
-
---get Sending Organisation Details
-SELECT 
- A.ORG_NAME,
- A.ADDRESS1,
- NVL(A.ADDRESS2,''),
- nvl(A.ADDRESSTOWN,''),
- nvl(A.ADDRESSCOUNTY,''),
- nvl(upper(A.ADDRESSPOSTCODE),'')
-
-INTO    
- v_org_name,
- v_address1,
- v_address2,
- v_addresstown,
- v_addresscounty,
- v_addresspostcode
-FROM   
- ORGANISATIONS A
-WHERE    
- A.ID = p_app_oid;
-
---Get Current User details for email
-SELECT
- A.FIRST_NAME||' '||A.LAST_NAME,
- NVL(X.MMS_INV_EMAIL,A.EMAIL) --use User's MMS Invoice Email, if defined for organisation map (SETUP > MY DETAILS > MY ORGANISATIONS), or User's email
-INTO   
- v_org_contact,
- v_org_email
-FROM    
- APP_USERS A
-JOIN 
- ORG_MAP x ON (A.USERNAME = x.USERNAME AND X.OID = p_app_oid)
-WHERE
- A.USERNAME = p_app_user;
-
---Copy v_org_email
- v_org_email_cc :=  v_org_email;
-
-
---Check if logo record exists. Do not display if no.
-select count(id) into v_logo_count
-from ORG_LOGO
-where oid = p_app_oid;
-
--- Initialize the LOBs
-DBMS_LOB.createtemporary(v_header, TRUE);
-DBMS_LOB.createtemporary(v_body, TRUE);
-DBMS_LOB.createtemporary(v_footer, TRUE);
-DBMS_LOB.createtemporary(v_billing_lines_table, TRUE);
-DBMS_LOB.createtemporary(l_body_html, TRUE);
-DBMS_LOB.createtemporary(l_body, TRUE);
-
-
---Loop through Member Details
-FOR i in (SELECT 
-            A.ID,
-            A.REF_ID,
-            A.FIRST_NAME,
-            A.ADDRESS1,
-            A.ADDRESS2,
-            A.ADDRESSTOWN,
-            A.ADDRESSCOUNTY,
-            A.ADDRESSPOSTCODE,
-            A.ADDRESSCOUNTRY,     
+  INSERT INTO REPORT_MMS_BILLING_RPT (ID, OID, USERNAME, MEMBER_ID, MEM_REF_ID, MEMBER_NAME, MEMID, MEM_NAME, MEM_MAP_ID, MEM_MAP_STATUS, BILLING_CYCLE, JOURNAL_DATE, INV_STATUS, HOLD, DUE_AMT, T_PAID_AMT)
+  SELECT A.ID, A.OID, p_app_user, 
+            A.MEMBER_ID, 
+            A.MEM_REF_ID,
             CASE
-             WHEN A.ORGANISATION IS NOT NULL THEN A.FIRST_NAME||' '||A.LAST_NAME||' ('||A.ORGANISATION||')'
-             ELSE A.FIRST_NAME||' '||A.LAST_NAME 
-            END as "MEMBER_NAME",
-            --EMAIL - Use EMAIL > EMAIL2 > PC1_EMAIL2 >'NO EMAIL ADDRESS' in this order.
-            CASE
-             WHEN A.EMAIL IS NULL THEN
+                --Full Group Assignments
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NOT NULL THEN  --AND A.MEMBER_ID = p_member_id THEN --Group (Billing Members)
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME||' (Billing Member)'
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME||' (Billing Member)'
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME||' (Billing Member)'
+                  END || '<BR> +' || (SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME) "FullName"
+                                  FROM MMS_MEMBER_MASTER B
+                                  WHERE B.OID = p_app_oid
+                                  AND B.MEM_STATUS LIKE 'Active'
+                                  AND B.ID <> A.MEMBER_ID
+                                  AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X WHERE A.OID = p_app_oid AND X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID)) 
+                --Individual Assignments with Group Billing
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NULL THEN
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME
+                  END || '<BR> (Billing Member(s): '|| (SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME||' (Billing Member)') "FullName"
+                                  FROM MMS_MEMBER_MASTER B
+                                  WHERE B.OID = p_app_oid
+                                  AND B.MEM_STATUS LIKE 'Active'
+                                  AND B.ID <> A.MEMBER_ID
+                                  AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X WHERE A.OID = p_app_oid AND X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID AND X.BILLING_MEMBER = 'Y')) 
+                      ||')'            
+                ELSE
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME
+                 END
+             END AS v_member_name,  --MEMBER_NAME
+          A.MEMID,  
               CASE
-                WHEN A.EMAIL2 IS NULL THEN  NVL((SELECT D.PC1_EMAIL1 FROM MMS_MEMBER_DETAILS D WHERE D.MEMBER_ID = A.ID AND D.OID = p_app_oid),'NO_EMAIL')
-                ELSE A.EMAIL2
-              END
-             ELSE A.EMAIL
-            END AS "EMAIL"--member email
-            FROM 
-              MMS_MEMBER_MASTER A
-            WHERE
-              A.OID = p_app_oid
-            AND
-              A.ID IN (SELECT R.MEMBER_ID FROM REPORT_MMS_BILLING_RPT R  --RETURN ONLY SELECTED MEMBERS
-                            WHERE nvl(R.SELECTED,'N') = 'Y' 
-                            AND R.OID = p_app_oid
-                            AND R.USERNAME = p_app_user)
-
-             )
-    LOOP
-
-    v_email := i.EMAIL;
-    IF v_email <> 'NO_EMAIL' THEN -- ONLY LOOP IF EMAIL EXISTS
-
-        --DBMS_OUTPUT.PUT_LINE('=================');
-        --DBMS_OUTPUT.PUT_LINE('Member #'||i.ID||' '||i.FIRST_NAME);
-        --DBMS_OUTPUT.PUT_LINE('Initial Statement Email '||v_email);
-
-        v_m_addressfull := '';        
-         IF i.ADDRESS1 IS NOT NULL THEN v_m_addressfull := i.ADDRESS1||'<br>'; END IF;
-         IF i.ADDRESS2 IS NOT NULL THEN v_m_addressfull := v_m_addressfull||i.ADDRESS2||'<br>'; END IF;
-         IF i.ADDRESSTOWN IS NOT NULL THEN v_m_addressfull := v_m_addressfull||i.ADDRESSTOWN||'<br>'; END IF;
-         IF i.ADDRESSCOUNTY IS NOT NULL THEN v_m_addressfull := v_m_addressfull||i.ADDRESSCOUNTY||'<br>'; END IF;
-         IF i.ADDRESSPOSTCODE IS NOT NULL THEN v_m_addressfull := v_m_addressfull||upper(i.ADDRESSPOSTCODE)||'<br>'; END IF;
-         IF i.ADDRESSCOUNTRY IS NOT NULL THEN v_m_addressfull := v_m_addressfull||i.ADDRESSCOUNTRY; END IF;
-
-        --get Header, Body. Footer text + variables
-         v_header := REPLACE(p_header_text, '{memberFirstName}', i.FIRST_NAME);
-         v_header := REPLACE(v_header, '{memberFullName}', i.MEMBER_NAME);
-         v_body := nvl(p_body_text,' '); -- Use nvl to force value into CLOB
-         v_footer := nvl(p_footer_text,' '); -- Use nvl to force value into CLOB
-
-
-          --Reset Balance Lines for each Member
-            v_balance := 0;
-            v_t_due := 0;
-            v_t_paid := 0;
-            v_t_balance := 0;
-
-
-
-        v_billing_lines_table := '<table border="1">';
-
-        --Billing lines table header - used in email below 
-        v_table_row :=  '<thead>
-                                    <tr>
-                                        <th class="tg-6h8h">Date</th>
-                                        <th class="tg-6h8h">Invoice #</th>
-                                        <th class="tg-6h8h">Item</th>
-                                        <th class="tg-6h8h">Status</th>
-                                        <th class="tg-6h8h">Charges</th>
-                                        <th class="tg-6h8h">Credits</th>
-                                        <th class="tg-6h8h">Balance</th>
-                                   </tr>
-                                   </thead>
-                                  <tbody>';
-
-           DBMS_LOB.APPEND(v_billing_lines_table, v_table_row);                       
-
-
-        --Fetch Balance Bfwed if selected
-           IF p_include_bfwd = 'Y' THEN 
-                SELECT ROUND(SUM(X.DUE_AMT - X.T_PAID_AMT),2) INTO v_bal_bfwd
-                FROM MMS_BILLING_MASTER_V X 
-                WHERE X.OID = p_app_oid
-                AND X.BILL_FROM_DATE < p_date_from
-                AND X.MEMBER_ID = i.ID;
-           ELSE v_bal_bfwd := 0;
-           END IF;
-
-
-
-       --Loop through Billing Lines
-
-        FOR b in (SELECT 
-                        A.ID,
-                        A.MEM_MAP_ID,
-                        A.HOLD,
-                        A.JM_ID
-
-                    FROM 
-                        MMS_BILLING_MASTER A
-                    WHERE
-                        A.MEMBER_ID = i.ID
-                    AND
-                        A.OID = p_app_oid
-
-
-                    --******** Exclude Options *********
-
-                    AND (A.STATEMENT_LAST_EMAILED_ON IS NULL OR 
-                            (A.STATEMENT_LAST_EMAILED_ON IS NOT NULL AND 
-                                (
-                                    (p_exclude_option = 'Today' AND TRUNC(A.STATEMENT_LAST_EMAILED_ON) <> TRUNC(SYSDATE)) OR
-                                    (p_exclude_option = 'Week' AND TRUNC(A.STATEMENT_LAST_EMAILED_ON, 'IW') <> TRUNC(SYSDATE, 'IW')) OR
-                                    (p_exclude_option = 'Month' AND TRUNC(A.STATEMENT_LAST_EMAILED_ON, 'MM') <> TRUNC(SYSDATE, 'MM')) OR
-                                    (p_exclude_option IS NULL)
-                                )
-                            )
-                        )      
-
-                    AND
-                        ((A.JM_ID IS NULL AND A.ID IN (SELECT R.ID FROM REPORT_MMS_BILLING_RPT R  --RETURN ONLY SELECTED BILLING LINES
-                                                        WHERE R.SELECTED = 'Y' 
-                                                        AND R.OID = p_app_oid
-                                                        AND R.USERNAME = p_app_user)) OR 
-                         (A.JM_ID IS NOT NULL AND A.PID IN (SELECT R.ID FROM REPORT_MMS_BILLING_RPT R  --RETURN ONLY SELECTED PAYMENT LINES
-                                                            WHERE R.SELECTED = 'Y' 
-                                                            AND R.OID = p_app_oid
-                                                            AND R.USERNAME = p_app_user)) OR
-                         (A.JM_ID IS NOT NULL AND A.PID = 0 AND A.ID IN (SELECT R.ID FROM REPORT_MMS_BILLING_RPT R  --RETURN UNALLOCATED LINES 
-                                                                            WHERE R.SELECTED = 'Y' 
-                                                                            AND R.OID = p_app_oid
-                                                                            AND R.USERNAME = p_app_user)))
-
-
-                    ORDER BY A.JOURNAL_DATE, A.DISP_LEVEL
-                   )
-
-
-           LOOP
-
-
-            --Fetch Billing Line for loop MEMBER & MEMBERSHIP
-
-            SELECT 
-            TO_CHAR(A.JOURNAL_DATE,'DD-MON-YYYY'),
-
-            CASE 
-             WHEN A.DISP_LEVEL = 0 THEN 'Membership Period' --Membership level billing
-             WHEN A.DISP_LEVEL = 1 THEN A.BILL_FROM_DATE||' - '||A.BILL_TO_DATE
-            END AS "BILLING_PERIOD",
-
-            CASE
-             WHEN A.JM_ID IS NULL THEN A.ID --BILLING LINE
-             WHEN A.PID <> 0 THEN A.PID -- 
-            END AS "ID", --INVOICE ID (don't show for unallocated)
-
-            A.MEMID,
-            A.MEM_MAP_ID,
-
-            CASE --order is important - Consolidated values to Draft > Paid > Unpaid > 
-                WHEN A.DISP_LEVEL = 1 THEN
-                    CASE
-                        WHEN A.INV_STATUS LIKE '%Draft%' THEN 'Draft'
-                        WHEN A.INV_STATUS LIKE '%FOC%' THEN 'Non-Billable'
-                        WHEN A.DUE_AMT = 0 THEN 'Non-Billable' --Non-Billable Line (Zero Rate)
-                        WHEN A.DUE_AMT > 0 THEN
-                            CASE
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) < 0 THEN 'Over Paid'
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) = 0 THEN 'Paid'
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) < round(A.DUE_AMT,2) THEN 'Part-Paid'
-                                WHEN SYSDATE BETWEEN to_date(A.BILL_FROM_DATE,'DD-MON-YYYY') AND to_date(A.JOURNAL_DATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Due' -- Standard Active
-                                WHEN to_date(A.BILL_FROM_DATE,'DD-MON-YYYY') > to_date(SYSDATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Unpaid' -- Standard Active
-                                WHEN to_date(A.JOURNAL_DATE,'DD-MON-YYYY') < to_date(SYSDATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Overdue' -- Standard Active
-                            END
-                        WHEN A.DUE_AMT < 0 THEN
-                            CASE
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) > 0 THEN 'Cr, Over Paid'
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) = 0 THEN 'Cr. Paid'
-                                WHEN round(A.DUE_AMT-A.T_PAID_AMT,2) > round(A.DUE_AMT,2) THEN 'Cr. Part-Paid'
-                                WHEN SYSDATE BETWEEN to_date(A.BILL_FROM_DATE,'DD-MON-YYYY') AND to_date(A.JOURNAL_DATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Cr. Due' -- Standard Active
-                                WHEN to_date(A.BILL_FROM_DATE,'DD-MON-YYYY') > to_date(SYSDATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Cr. Unpaid' -- Standard Active
-                                WHEN to_date(A.JOURNAL_DATE,'DD-MON-YYYY') < to_date(SYSDATE,'DD-MON-YYYY') AND A.JM_ID IS NULL THEN 'Cr. Overdue' -- Standard Active
-                            END           
-                    END
-            END AS "INV_STATUS",
-
-
-            CASE
-             WHEN A.DISP_LEVEL = 2 THEN A.JOURNAL_TYPE
-             ELSE 'Invoice'
-            END AS "JOURNAL_TYPE",
-
-            A.JM_ID,
-
-            CASE
-                WHEN A.JM_ID IS NULL AND A.HOLD IS NULL THEN nvl(A.DUE_AMT,0)
-                WHEN A.JM_ID IS NULL THEN 0 --Due lines on hold
-            END AS "DUE_AMT",
-
-
-            CASE
-               WHEN A.JM_ID IS NOT NULL THEN nvl(A.PAID_AMT,0)
-            END AS "PAID_AMT", --payment line
-
-            nvl(T_PAID_AMT,0) AS "TOTAL_BILL_PAID" -- BILLING LINE TOTAL PAID_AMT"
-
-            INTO    
-            v_invoice_date,
-            v_bill_period,
-            v_inv_id,
-            v_memid,
-            v_mem_map_id,
-            v_inv_status,
-            v_journal_type,
-            v_jm_id,
-            v_due,
-            v_paid,
-            v_bill_paid
-
-            FROM
-                MMS_BILLING_MASTER A
-            WHERE
-                A.OID = p_app_oid
-            AND
-                A.ID = b.ID;
-
-
-            --calc rolling line balance
-            v_balance := nvl(v_balance,0) + nvl(v_due,0) - nvl(v_paid,0);
-            v_due_disp := p_app_currency||to_char(v_due,'999,999,999,990.00');
-            v_paid_disp := p_app_currency||to_char(v_paid,'999,999,999,990.00'); --show as negative
-            v_balance_disp := p_app_currency||to_char(v_balance,'999,999,999,990.00');
-
-
-
-            --Get Membership Name ("ITEM")
-            v_mem_name := '';
-            v_mem_name_expno := '';
-            v_mem_name_vouchno := '';
-
-            --Unallocated Payments/Balance/Credit
-            IF v_memid = 0 THEN v_mem_name := '** Unallocated '||v_journal_type||' **';   
-            --Marked as Paid / Credited 
-            ELSIF v_memid <> 0 AND nvl(v_jm_id,-1) = 0 THEN v_mem_name := v_journal_type; 
-            -- Allocated Payments  
-            ELSIF v_memid <> 0 AND nvl(v_jm_id,-1) > 0 THEN 
-                --Add Vouch No / Exp No
-                SELECT J.EXP_NO, j.VOUCH_NO INTO v_mem_name_expno, v_mem_name_vouchno FROM JOURNAL_MASTER J WHERE J.ID = v_jm_id AND J.OID = p_app_oid;
-                v_mem_name := v_mem_name_vouchno||' '||v_mem_name_expno||' ('||v_journal_type||')';
-                v_due_disp := ''; --Clear due display
-            -- Billing Lines
-            ELSE
-                SELECT M.MEM_MAP_NAME INTO v_mem_name
-                FROM MMS_MEMBERSHIP_MAP M
-                WHERE M.ID = v_mem_map_id
-                AND M.OID = p_app_oid;
-
-                IF v_mem_name IS NULL THEN 
-                    SELECT MEM_NAME INTO v_mem_name
-                    FROM MMS_MEMBERSHIPS
-                    WHERE ID = v_memid
-                    AND OID = p_app_oid;
-                END IF;
-
-                --add Bill_Period
-                v_mem_name := v_mem_name||' '||v_bill_period;
-                v_paid_disp := ''; --Clear paid display
-            END IF;
-
-            --DBMS_OUTPUT.PUT_LINE('Membership ' || v_memid ||' '|| v_mem_name||' Invoice #'||v_inv_id);
-
-             --Update Email Date on Billing/Payment Lines for Non-Draft (Live)
-             IF p_email_status <> 'DRAFT' THEN  
-                UPDATE MMS_BILLING_MASTER SET STATEMENT_LAST_EMAILED_ON = SYSTIMESTAMP
-                WHERE (ID = v_inv_id OR PID = v_inv_id)
-                AND OID = p_app_oid;
-             END IF;
-
-            --generate billing lines
-                v_table_row := '
-                <tr>
-                        <td class="tg-wp8o">'||v_invoice_date||'</td>
-                        <td class="tg-wp8o">'||v_inv_id||'</td>
-                        <td class="tg-wp77">'||v_mem_name||'</td>
-                        <td class="tg-wp8o">'||v_inv_status||'</td>
-                        <td class="tg-3z1b">'||v_due_disp||'</td>
-                        <td class="tg-3z1b">'||v_paid_disp||'</td>
-                        <td class="tg-3z1b">'||v_balance_disp||'</td>
-                    </tr>';
-
-                   DBMS_LOB.APPEND(v_billing_lines_table, v_table_row);               
-
-            --v_t_balance := nvl(v_balance,0);
-
-            v_t_due := v_t_due + v_due;
-            v_t_paid := v_t_paid + v_paid;
-            v_t_balance := v_t_balance + v_balance;
-
-
-
-            v_numBillLines := v_numBillLines+1;  
-
-
-            END LOOP;
-
-             --total line amounts
---            v_t_balance_disp := p_app_currency||to_char(v_t_balance,'999,999,999,990.00');
-
-            v_t_due_disp := p_app_currency||to_char(v_t_due,'999,999,999,990.00');
-            v_t_paid_disp := p_app_currency||to_char(v_t_paid,'999,999,999,990.00');
-            v_t_balance_disp := p_app_currency||to_char(v_t_balance,'999,999,999,990.00');
-
-
-            --Add total lines to table
-            --removed: <td class="tg-3z1b"><b>'||v_t_balance_disp||'</td>
-               v_table_row := '
-                    <tr>
-                        <td class="tg-wp8o">'||'</td>
-                        <td class="tg-wp8o">'||'</td>
-                        <td class="tg-wp77">'||'</td>
-                        <td class="tg-wp8o">'||'</td>
-                        <td class="tg-wp8o">'||'</td>
-                        <td class="tg-wp8o">'||'</td>
-                        <td class="tg-3z1b"><b>'||'</td>
-                    </tr>'; 
-
-                DBMS_LOB.APPEND(v_billing_lines_table, v_table_row);    
-
-            l_body := 'Please view this email in a HTML mail client.';
-
-            l_body_html := '<html>
-                             <head>
-                                <style type="text/css">
-                                    .tg  {border-collapse:collapse;border-spacing:0;}
-                                    .tg td{border-color:black;border-style:solid;border-width:0px;font-family:Arial, sans-serif;font-size:12px;
-                                    overflow:hidden;padding:8px 5px;word-break:normal;}
-                                    .tg th{border-color:black;border-style:solid;border-width:0px;font-family:Arial, sans-serif;font-size:12px;
-                                    font-weight:normal;overflow:hidden;padding:8px 5px;word-break:normal;}
-                                    .tg .tg-3z1b{border-color:#000000;text-align:right;vertical-align:top}
-                                    .tg .tg-6h8h{background-color:#efefef;border-color:#000000;font-weight:bold;text-align:center;vertical-align:top}
-                                 </style>
-                              </head>
-                            <body style="background-color: #ffffff; line-height: 1.5;">';
-
-            --Add logo image if exists
-            IF v_logo_count = 1 THEN 
-                     DBMS_LOB.APPEND(l_body_html, to_clob('<p><img src="cid:' || l_content_id || '" alt="Logo Image" width="300"></p>'));               
-            END IF;
-
-            --ADD DRAFT BANNER IF DRAFT EMAIL
-                IF p_email_status = 'DRAFT' THEN
-                    DBMS_LOB.APPEND(l_body_html, to_clob('<h2><span style="background-color: #ffff00;"><strong>DRAFT STATEMENT EMAIL - THIS HAS NOT BEEN SENT TO THE RECIPIENT</strong></span></h2>'));
-                END IF;
-
-
-            --continue building l_body_html
-                DBMS_LOB.APPEND(l_body_html, to_clob(
-
-                                '<H1>'||v_org_name||'</H1>    
-
-                                <hr>
-
-                                <h2><b>STATEMENT</b></h2>
-                                <p><b>Issue Date: '||SYSDATE||'</b></p>
-                                <h2><b>Member:</H2>
-                                '||i.member_name||'<br>
-                                '||v_m_addressfull||'<br>
-                                '||v_email||'<br>
-                                 Member Ref: '||i.ref_id||'</p>
-                                <br>
-                                <br>
-                                <br>
-
-                                <p>'));
-
-            --append Header Clob
-            DBMS_LOB.APPEND(l_body_html, v_header);
-
-            DBMS_LOB.APPEND(l_body_html, to_clob('</p><p><table class="tg">'));
-
-            --append TABLE Clob
-            DBMS_LOB.APPEND(l_body_html, v_billing_lines_table);
-
-            DBMS_LOB.APPEND(l_body_html, to_clob('</tbody></table><p>'));
-
-            --append Body Clob
-            DBMS_LOB.APPEND(l_body_html,v_body);
-
-            DBMS_LOB.APPEND(l_body_html,to_clob('</p><p>'||'<center><b>'));
-
-            --append Footer Clob
-            DBMS_LOB.APPEND(l_body_html,v_footer);
-
-            --append Body Clob
-            DBMS_LOB.APPEND(l_body_html,to_clob('</center></b>'||'</p>
-                                </p>
-                                <p><hr>
-                                <p>
-                                <p><u>About this email</u>
-                                <br>You are receiving this email from '||v_org_name||'.</p>
-                                <p><small>This email has been sent from<br>
-                                <a href="www.clubtreasurer.com"><img src="https://clubtreasurer.com/images/clubtreasurer-small-50pc.png" width="150"></a>
-                                </small></p>
-
-                                </body></html>'));
-
-
-
-            --DBMS_OUTPUT.PUT_LINE('Member Email '||v_email);
-
-
-           --CHANGE EMAIL RECIPIENT TO ORG ONLY IF DRAFT EMAIL 
-           --CHECK BCC FLAG AND SEND COPY TO USER IF CHECKED
-           IF p_email_status = 'DRAFT' THEN v_email := v_org_email; v_org_email_cc := '';  -- stops duplicate emails    
-
-           ELSIF p_email_status = 'LIVE' AND NVL(p_bcc_me,'N') = 'N' THEN v_org_email_cc := '';
-           END IF;
-
-
-
-           l_id := apex_mail.send (
-                        p_to        => trim(v_email),
-                        p_from      => 'noreply@clubtreasurer.com',
-                        p_replyto   => v_org_email,
-                        --p_bcc       => v_org_email||',clubtreasurer.com@gmail.com',
-                        p_bcc       => v_org_email_cc,
-                        p_body      => l_body,
-                        p_body_html => l_body_html,
-                        p_subj      => v_org_name||' Statement - '||i.member_name);       
-
-
-             --Check if logo record exists, ignore if not.
-                    IF v_logo_count = 1 THEN 
-                        select filename, mimetype, blob_content
-                         into l_filename, l_mime_type, l_image
-                         from ORG_LOGO
-                         where oid = p_app_oid;
-
-                        select filename, mimetype, blob_content
-                                  into l_filename, l_mime_type, l_image
-                                  FROM ORG_LOGO
-                                  WHERE OID = p_app_oid;
-
-                        APEX_MAIL.ADD_ATTACHMENT(
-                                p_mail_id    => l_id,
-                                p_attachment => l_image,
-                                p_filename   => l_filename,
-                                p_mime_type  => l_mime_type,
-                                p_content_id => l_content_id);
-                     END IF;
-
-
-           v_numMembers := v_numMembers+1;
-
-  END IF; --NO EMAIL IF/ENDIF LOOP
-
-   --END LOOP (n ONLY IF DRAFT)
-  EXIT WHEN p_email_status = 'DRAFT' AND v_numMembers >= 100; 
-
-
-END LOOP;
-
---push mail queue immediately - for testing
- IF p_email_status = 'DRAFT' THEN APEX_MAIL.PUSH_QUEUE;
- END IF;
-
-
-SELECT v_numMembers INTO p_email_count FROM DUAL;
-
--- DBMS_OUTPUT.PUT_LINE('Number Members '||v_numMembers);
--- DBMS_OUTPUT.PUT_LINE('Number Bill Lines '||v_numBillLines);
-
--- Free the LOBs when done
-    DBMS_LOB.freetemporary(v_header);
-    DBMS_LOB.freetemporary(v_body);
-    DBMS_LOB.freetemporary(v_footer);
-    DBMS_LOB.freetemporary(v_billing_lines_table);
-    DBMS_LOB.freetemporary(l_body_html);
-    DBMS_LOB.freetemporary(l_body);
-
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NOT NULL THEN --A.MEMBER_ID <> p_member_id THEN
+                 A.MEM_NAME ||'<br> (Full Group Membership)'
+                ELSE A.MEM_NAME
+              END,
+          A.MEM_MAP_ID,
+              --A.MEM_MAP_STATUS,
+              --/**
+              CASE
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND A.START_DATE > SYSDATE THEN 'Future Active'
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND nvl(A.EARLIEST_END_DATE,SYSDATE) <= SYSDATE AND 
+                        A.BILLING_CYCLE = 'One Time' AND (NVL(A.DUE_AMT,0)-NVL(A.T_PAID_AMT,0)) = 0 
+                    THEN 'Completed'
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND NVL(A.RENEW_FLAG,'Y') = 'N' AND
+                        nvl(A.EARLIEST_END_DATE,SYSDATE) <= SYSDATE AND (NVL(A.DUE_AMT,0)-NVL(A.T_PAID_AMT,0)) = 0 
+                    THEN 'Expired'
+                  WHEN A.MEM_MAP_STATUS = 'Active' THEN 'Active'
+                  WHEN A.MEM_MAP_STATUS = 'On-Hold' THEN 'On-Hold'
+                  WHEN A.MEM_MAP_STATUS = 'Cancelled' AND A.CANCELLATION_DATE > SYSDATE THEN 'Active (Cancel Pending)'
+                  WHEN A.MEM_MAP_STATUS = 'Cancelled' THEN 'Cancelled'
+                ELSE A.MEM_MAP_STATUS
+              END,
+              --**/
+          A.BILLING_CYCLE, A.JOURNAL_DATE, A.INV_STATUS, A.HOLD, nvl(A.DUE_AMT,0), nvl(A.T_PAID_AMT,0)
+
+
+
+
+  FROM MMS_BILLING_MASTER_V A
+  --JOIN MMS_MEMBERSHIP_MAP B ON (B.ID = A.MEM_MAP_ID AND B.OID = p_app_oid)
+  JOIN MMS_MEMBER_MASTER M ON (M.ID = A.MEMBER_ID AND M.OID = p_app_oid)
+
+  WHERE A.OID = p_app_oid
+  AND
+   (
+    (
+      NVL(p_include_bfwd, 'N') = 'Y' AND -- incl. Negative or positive balances
+      (
+        (SELECT ROUND(X.DUE_AMT - X.T_PAID_AMT, 2) FROM MMS_BILLING_MASTER_V X
+         WHERE X.OID = p_app_oid
+         AND A.BILL_FROM_DATE <= p_date_to
+         AND X.ID = A.ID) <> 0
+      OR
+        ((NVL(p_date_option, 'SD') = 'SD' AND A.BILL_FROM_DATE BETWEEN p_date_from AND p_date_to) OR
+        (NVL(p_date_option, 'SD') = 'BP' AND A.BILL_FROM_DATE <= p_date_to AND A.BILL_TO_DATE >= p_date_from))
+      )
+    ) 
+    OR
+    (
+      NVL(p_include_bfwd, 'N') = 'N' AND
+      ((NVL(p_date_option, 'SD') = 'SD' AND A.BILL_FROM_DATE BETWEEN p_date_from AND p_date_to) OR
+       (NVL(p_date_option, 'SD') = 'BP' AND A.BILL_FROM_DATE <= p_date_to AND A.BILL_TO_DATE >= p_date_from))
+    )
+  )
+
+    /**
+    D = DRAFT OR HOLD
+    A = ALL STATUSES
+    OP = OVER-PAID
+    P = PAID
+    PP = PART PAID
+    U = UNPAID
+    OD = OVERDUE
+    ODPP = OVERDUE + PART PAID
+    ID = INCLUDE DRAFT
+    **/
+
+
+    AND (A.DISP_LEVEL = 1 AND (
+           (p_invoice_status = 'A' AND A.INV_STATUS NOT LIKE '%Draft%' AND A.HOLD IS NULL) OR -- DEFUALT = ALL STATUS (EXCLUDING DRAFT & HOLD)
+           (p_invoice_status = 'D' AND (A.INV_STATUS LIKE '%Draft%' OR A.HOLD = 'H')) OR
+           (p_invoice_status = 'OP' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0))) OR
+           (p_invoice_status = 'P' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) <= 0 AND A.HOLD IS NULL) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) >= 0 AND A.HOLD IS NULL))) OR
+           (p_invoice_status = 'PP' AND ((A.DUE_AMT > 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < A.DUE_AMT AND A.HOLD IS NULL))) OR
+           (p_invoice_status = 'U' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0)) AND A.INV_STATUS NOT LIKE '%Draft%') OR
+           (p_invoice_status = 'ODPP' AND (((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0)) AND TO_DATE(SYSDATE) >= TO_DATE(A.JOURNAL_DATE) AND A.INV_STATUS NOT LIKE '%Draft%')) OR
+           (p_invoice_status = 'OD' AND (((A.DUE_AMT > 0 AND round(A.T_PAID_AMT,2) = 0) OR (A.DUE_AMT < 0 AND round(A.T_PAID_AMT,2) = 0)) AND TO_DATE(SYSDATE) > TO_DATE(A.JOURNAL_DATE) AND A.INV_STATUS NOT LIKE '%Draft%'))
+           OR p_invoice_status = 'ID')
+       OR A.DISP_LEVEL = 0)
+
+    AND
+
+      ((NVL(M.SECTION_ID,0) <> 0 AND M.SECTION_ID = p_section_id ) OR (NVL(M.SECTION_ID,0) = 0 AND p_section_id = -1) OR p_section_id = 0)
+
+
+    AND
+      ((p_memid <> 0 AND (A.MEMID = p_memid OR 
+                            A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID = p_memid) OR 
+                             A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID IN (SELECT Q.ID FROM MMS_MEMBERSHIPS Q WHERE Q.OID = p_app_oid AND Q.PID = p_memid)) OR 
+                              A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID IN (SELECT Q.ID FROM MMS_MEMBERSHIPS Q WHERE Q.OID = p_app_oid AND Q.PID IN (SELECT QQ.ID FROM MMS_MEMBERSHIPS QQ WHERE QQ.OID = p_app_oid AND QQ.PID = p_memid)))
+                          )) OR p_memid = 0)
+
+    --AND
+      --((p_memid <> 0 AND p_memid = A.MEMID) OR p_memid = 0)
+
+    AND 
+      (
+        (p_member_id = -1 AND ((p_member_id_N IS NOT NULL AND instr(':' || p_member_id_N || ':'  , ':' || A.MEMBER_ID || ':' ) > 0) OR p_member_id_N = '0' ))
+       OR 
+        --(p_member_id > 0 AND p_member_id = A.MEMBER_ID)
+        --26.02.2025 Added MEMBER GROUP support when single member selected
+        (p_member_id > 0 AND (p_member_id = A.MEMBER_ID OR (p_member_id IN (SELECT X.MEMBER_ID
+                                                                            FROM MMS_MEMBER_GROUP_MAP X
+                                                                            WHERE X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID
+                                                                            AND X.OID = p_app_oid))))
+
+       OR
+         p_member_id = 0
+      )
+
+
+    AND 
+      ((p_show = 'A' AND M.MEM_STATUS = 'Active') OR (p_show = 'I' AND M.MEM_STATUS = 'Inactive') OR p_show = 'AI')
+
+    AND A.DISP_LEVEL IN (0,1); -- DUE AMOUNTS ONLY
+
+END IF;
+
+--UNALLOCATED / MEMBER BALANCES IF SELECTED (p_include_ua = 'Y)
+
+IF NVL(p_include_ua, 'N') <> 'N' THEN -- Don't show if excluded.
+
+    INSERT INTO REPORT_MMS_BILLING_RPT (ID, OID, USERNAME, MEMBER_ID, MEM_REF_ID, MEMBER_NAME, MEMID, MEM_NAME, MEM_MAP_ID, MEM_MAP_STATUS, JOURNAL_DATE, INV_STATUS, HOLD, DUE_AMT, T_PAID_AMT)
+      SELECT A.ID, A.OID, p_app_user, A.MEMBER_ID, M.REF_ID,
+             CASE
+               WHEN p_app_mms_member_view = 'OL' THEN M.ORGANISATION || ' - ' || M.FIRST_NAME || ' ' || M.LAST_NAME
+               WHEN p_app_mms_member_sort = 'FL' THEN M.FIRST_NAME || ' ' || M.LAST_NAME
+               ELSE M.LAST_NAME || ', ' || M.FIRST_NAME
+             END AS v_member_name,
+             A.MEMID,
+             CASE 
+                WHEN A.JOURNAL_TYPE = 'Member Balance' THEN 'UNALLOCATED MEMBER BALANCE'
+                WHEN A.SOURCE LIKE '%ACCT_TRNF%' THEN 'UNALLOCATED MEMBER PAYMENT'
+                ELSE 'UNALLOCATED MEMBER PAYMENT'
+               END AS "MEMBERSHIP",   --Membership
+               A.MEM_MAP_ID, 'UNALLOCATED', A.JOURNAL_DATE, A.INV_STATUS, A.HOLD, nvl(A.DUE_AMT,0), nvl(A.PAID_AMT,0)
+      FROM MMS_BILLING_MASTER A
+      JOIN MMS_MEMBER_MASTER M ON (A.MEMBER_ID = M.ID AND M.OID = p_app_oid)
+      WHERE
+        A.OID = p_app_oid
+      AND
+        A.MEMID = 0
+      AND
+        A.PID = 0
+      AND
+        ((NVL(M.SECTION_ID,0) <> 0 AND M.SECTION_ID = p_section_id ) OR (NVL(M.SECTION_ID,0) = 0 AND p_section_id = -1) OR p_section_id = 0)
+      AND
+        (
+          (p_member_id = -1 AND ((p_member_id_N IS NOT NULL AND instr(':' || p_member_id_N || ':'  , ':' || A.MEMBER_ID || ':' ) > 0) OR p_member_id_N = '0'))
+        OR 
+          (p_member_id > 0 AND p_member_id = A.MEMBER_ID)
+        OR
+          p_member_id = 0
+        )
+      AND 
+        ((p_show = 'A' AND M.MEM_STATUS = 'Active') OR (p_show = 'I' AND M.MEM_STATUS = 'Inactive') OR p_show = 'AI')
+      AND
+         A.JOURNAL_DATE <= p_date_to -- Don't return lines later than date range (always include earlier)
+      AND
+         A.DISP_LEVEL IN (2); -- UNALLOCATED IS A PAYMENT    
+ END IF;       
+
+ COMMIT; -- Commit the changes
+
+        DBMS_OUTPUT.PUT_LINE('Billing Report updated successfully.');
+
+        EXCEPTION
+            WHEN OTHERS THEN
+                ROLLBACK; -- Rollback on error
+                DBMS_OUTPUT.PUT_LINE('Error updating Billing Report: ' || SQLERRM); 
 
 END;
