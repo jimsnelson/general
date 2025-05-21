@@ -1,0 +1,354 @@
+create or replace PROCEDURE generate_billing_report2 (
+  p_app_oid IN NUMBER,
+  p_app_user IN VARCHAR2,
+  p_app_mms_member_view IN VARCHAR2,
+  p_app_mms_member_sort IN VARCHAR2,
+  p_source_page IN VARCHAR2 DEFAULT '0', --source page  
+  p_include_bfwd IN VARCHAR2 DEFAULT 'N',
+  p_include_ua IN VARCHAR2 DEFAULT 'Y', --include Unallocated
+  p_date_option IN VARCHAR2 DEFAULT 'SD',
+  p_date_from IN DATE DEFAULT '01-JAN-1900',
+  p_date_to IN DATE DEFAULT '31-DEC-2199',
+  p_invoice_status IN VARCHAR2 DEFAULT 'A',
+  p_show IN VARCHAR2 DEFAULT 'AI', --Active/Inacive Members
+  
+  p_section_id IN NUMBER DEFAULT 0,
+  p_memid IN NUMBER DEFAULT 0,
+  p_member_id IN NUMBER DEFAULT -1, -- "-1" is used when called from a multi-select page
+
+  p_section_id_N IN VARCHAR2 DEFAULT '',  -- used for Multi-select pages (MUST SET p_sectiom_id as '-1')
+  p_memid_N IN VARCHAR2 DEFAULT '',  -- used for Multi-select pages (MUST SET p_memid as '-1')
+  p_member_id_N IN VARCHAR2 DEFAULT ''  -- used for Multi-select pages (MUST SET p_member_id as '-1')
+  
+ 
+)
+IS
+BEGIN
+  DELETE FROM REPORT_MMS_BILLING_RPT
+  WHERE OID = p_app_oid
+  AND USERNAME = p_app_user;
+
+IF  NVL(p_include_ua, 'N') <> 'UN' THEN  -- UN=Unallocated only (p185) 
+
+  INSERT INTO REPORT_MMS_BILLING_RPT (ID, OID, USERNAME, MEMBER_ID, MEM_REF_ID, MEMBER_NAME, MEMBER_NAME_SORT, MEMID, MEM_NAME, MEM_MAP_ID, MEM_MAP_STATUS, BILLING_CYCLE, JOURNAL_DATE, INV_STATUS, HOLD, GENERIC_GROUP_ID, GROUP_MAP_ID, DUE_AMT, T_PAID_AMT)
+  SELECT A.ID, A.OID, p_app_user, 
+            A.MEMBER_ID, 
+            A.MEM_REF_ID,
+            CASE
+                --Full Group Assignments
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NOT NULL THEN  --AND A.MEMBER_ID = p_member_id THEN --Group (Billing Members)
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME||' (Assigned Billing Member)'
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME||' (Assigned Billing Member)'
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME||' (Assigned Billing Member)'
+                  END || '<BR>' ||'+'|| (SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME) "FullName"
+                                  FROM MMS_MEMBER_MASTER B
+                                  WHERE B.OID = p_app_oid
+                                  AND B.MEM_STATUS LIKE 'Active'
+                                  AND B.ID <> A.MEMBER_ID
+                                  AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X WHERE X.OID = p_app_oid AND X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID)) 
+                --Individual Assignments with Group Billing
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NULL THEN
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME||' (Assigned Member)'
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME||' (Assigned Member)'
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME||' (Assigned Member)'
+                  END || '<BR> (Other Billing Member(s): '|| (SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME||' (Billing Member)') "FullName"
+                                  FROM MMS_MEMBER_MASTER B
+                                  WHERE B.OID = p_app_oid
+                                  AND B.MEM_STATUS LIKE 'Active'
+                                  AND B.ID <> A.MEMBER_ID
+                                  AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X WHERE X.OID = p_app_oid AND X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID AND X.BILLING_MEMBER = 'Y')) 
+                      ||')'            
+                ELSE
+                  CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION || ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME
+                 END
+             END AS v_member_name,  --MEMBER_NAME
+             CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN A.ORGANISATION|| ' - ' || A.FIRST_NAME || ' ' || A.LAST_NAME
+                    WHEN p_app_mms_member_sort = 'FL' THEN A.FIRST_NAME || ' ' || A.LAST_NAME
+                    ELSE A.LAST_NAME || ', ' || A.FIRST_NAME
+             END,
+          A.MEMID,  
+              CASE
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NOT NULL THEN
+                 A.MEM_NAME||'<br> (Group Membership)'
+                WHEN A.MEMBER_GROUP_MAP_ID IS NOT NULL AND A.GENERIC_GROUP_ID IS NULL THEN
+                 A.MEM_NAME||'<br> (Individual Membership linked to Group - '||A.FIRST_NAME||' '||A.LAST_NAME||')'                         
+                ELSE A.MEM_NAME
+              END,
+          A.MEM_MAP_ID,
+              --/**
+              CASE
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND A.START_DATE > SYSDATE THEN 'Future Active'
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND nvl(A.EARLIEST_END_DATE,SYSDATE) <= SYSDATE AND 
+                        A.BILLING_CYCLE = 'One Time' AND (NVL(A.DUE_AMT,0)-NVL(A.T_PAID_AMT,0)) = 0 
+                    THEN 'Completed'
+                  WHEN A.MEM_MAP_STATUS = 'Active' AND NVL(A.RENEW_FLAG,'Y') = 'N' AND
+                        nvl(A.EARLIEST_END_DATE,SYSDATE) <= SYSDATE AND (NVL(A.DUE_AMT,0)-NVL(A.T_PAID_AMT,0)) = 0 
+                    THEN 'Expired'
+                  WHEN A.MEM_MAP_STATUS = 'Active' THEN 'Active'
+                  WHEN A.MEM_MAP_STATUS = 'On-Hold' THEN 'On-Hold'
+                  WHEN A.MEM_MAP_STATUS = 'Cancelled' AND A.CANCELLATION_DATE > SYSDATE THEN 'Active (Cancel Pending)'
+                  WHEN A.MEM_MAP_STATUS = 'Cancelled' THEN 'Cancelled'
+                ELSE A.MEM_MAP_STATUS
+              END, 
+              --**/
+          A.BILLING_CYCLE, A.JOURNAL_DATE, A.INV_STATUS, A.HOLD, A.GENERIC_GROUP_ID, A.MEMBER_GROUP_MAP_ID, nvl(A.DUE_AMT,0), nvl(A.T_PAID_AMT,0)
+
+  FROM MMS_BILLING_MASTER_V A
+  JOIN MMS_MEMBER_MASTER M ON (M.ID = A.MEMBER_ID AND M.OID = p_app_oid)
+
+  WHERE A.OID = p_app_oid
+  AND
+   (
+    (
+      NVL(p_include_bfwd, 'N') = 'Y' AND -- incl. Negative or positive balances
+      (
+        (SELECT ROUND(X.DUE_AMT - X.T_PAID_AMT, 2) FROM MMS_BILLING_MASTER_V X
+         WHERE X.OID = p_app_oid
+         AND A.BILL_FROM_DATE <= p_date_to
+         AND X.ID = A.ID) <> 0
+      OR
+        ((NVL(p_date_option, 'SD') = 'SD' AND A.BILL_FROM_DATE BETWEEN p_date_from AND p_date_to) OR
+        (NVL(p_date_option, 'SD') = 'BP' AND A.BILL_FROM_DATE <= p_date_to AND A.BILL_TO_DATE >= p_date_from))
+      )
+    ) 
+    OR
+    (
+      NVL(p_include_bfwd, 'N') = 'N' AND
+      ((NVL(p_date_option, 'SD') = 'SD' AND A.BILL_FROM_DATE BETWEEN p_date_from AND p_date_to) OR
+       (NVL(p_date_option, 'SD') = 'BP' AND A.BILL_FROM_DATE <= p_date_to AND A.BILL_TO_DATE >= p_date_from))
+    )
+  )
+
+    /**
+    D = DRAFT OR HOLD
+    A = ALL STATUSES
+    OP = OVER-PAID
+    P = PAID
+    PP = PART PAID
+    U = UNPAID
+    OD = OVERDUE
+    ODPP = OVERDUE + PART PAID
+    ID = INCLUDE DRAFT
+    **/
+
+
+    AND (A.DISP_LEVEL = 1 AND (
+           (p_invoice_status = 'A' AND A.INV_STATUS NOT LIKE '%Draft%' AND A.HOLD IS NULL) OR -- DEFUALT = ALL STATUS (EXCLUDING DRAFT & HOLD)
+           (p_invoice_status = 'D' AND (A.INV_STATUS LIKE '%Draft%' OR A.HOLD = 'H')) OR
+           (p_invoice_status = 'OP' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0))) OR
+           (p_invoice_status = 'P' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) <= 0 AND A.HOLD IS NULL) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) >= 0 AND A.HOLD IS NULL))) OR
+           (p_invoice_status = 'PP' AND ((A.DUE_AMT > 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < A.DUE_AMT AND A.HOLD IS NULL))) OR
+           (p_invoice_status = 'U' AND ((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0)) AND A.INV_STATUS NOT LIKE '%Draft%') OR
+           (p_invoice_status = 'ODPP' AND (((A.DUE_AMT >= 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) > 0) OR (A.DUE_AMT < 0 AND round(A.DUE_AMT-A.T_PAID_AMT,2) < 0)) AND TO_DATE(SYSDATE) >= TO_DATE(A.JOURNAL_DATE) AND A.INV_STATUS NOT LIKE '%Draft%')) OR
+           (p_invoice_status = 'OD' AND (((A.DUE_AMT > 0 AND round(A.T_PAID_AMT,2) = 0) OR (A.DUE_AMT < 0 AND round(A.T_PAID_AMT,2) = 0)) AND TO_DATE(SYSDATE) > TO_DATE(A.JOURNAL_DATE) AND A.INV_STATUS NOT LIKE '%Draft%'))
+           OR p_invoice_status = 'ID')
+       OR A.DISP_LEVEL = 0)
+
+    AND
+
+      ((NVL(M.SECTION_ID,0) <> 0 AND M.SECTION_ID = p_section_id ) OR (NVL(M.SECTION_ID,0) = 0 AND p_section_id = -1) OR p_section_id = 0)
+
+
+    AND
+      ((p_memid <> 0 AND (A.MEMID = p_memid OR 
+                            A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID = p_memid) OR 
+                             A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID IN (SELECT Q.ID FROM MMS_MEMBERSHIPS Q WHERE Q.OID = p_app_oid AND Q.PID = p_memid)) OR 
+                              A.MEMID IN (SELECT X.ID FROM MMS_MEMBERSHIPS X WHERE X.OID = p_app_oid AND X.PID IN (SELECT Q.ID FROM MMS_MEMBERSHIPS Q WHERE Q.OID = p_app_oid AND Q.PID IN (SELECT QQ.ID FROM MMS_MEMBERSHIPS QQ WHERE QQ.OID = p_app_oid AND QQ.PID = p_memid)))
+                          )) OR p_memid = 0)
+
+
+    AND 
+      (
+        (p_member_id = -1 AND ((p_member_id_N IS NOT NULL AND instr(':' || p_member_id_N || ':'  , ':' || A.MEMBER_ID || ':' ) > 0) 
+          OR p_member_id_N = '0' ))
+
+       OR 
+          --26.02.2025 Added MEMBER GROUP support when single member selected
+          (p_member_id > 0 AND (p_member_id = A.MEMBER_ID OR p_member_id IN (SELECT X.MEMBER_ID
+                                                                            FROM MMS_MEMBER_GROUP_MAP X
+                                                                            WHERE X.GROUP_MAP_ID = A.MEMBER_GROUP_MAP_ID
+                                                                            AND X.OID = p_app_oid)))
+       OR
+         p_member_id = 0  --ALL MEMBERS
+
+      )
+
+
+    AND 
+      ((p_show = 'A' AND M.MEM_STATUS = 'Active') OR (p_show = 'I' AND M.MEM_STATUS = 'Inactive') OR p_show = 'AI')
+
+    AND A.DISP_LEVEL IN (0,1); -- DUE AMOUNTS ONLY
+
+
+          --------------------------------------------------------
+          --** GROUP MEMBERSHIP ASSIGNMENTS FOR OTHER GROUP MEMBERS
+          --** Uses REPORT_MMS_BILLING_SEQ to create unique ID for added billing lines => Concatenated with ID ("ID.DUPLICATE_ID")
+          --** Copies Orginal ID into DUPLICATE_ID column (=> Rows with NULL DUPLICATE_ID are non-Group rows)
+          --------------------------------------------------------
+
+          INSERT INTO REPORT_MMS_BILLING_RPT 
+              (ID, DUPLICATE_ID, OID, USERNAME, MEMBER_ID, MEM_REF_ID, MEMBER_NAME, MEMBER_NAME_SORT,
+              MEMID, MEM_NAME, MEM_MAP_ID, MEM_MAP_STATUS, BILLING_CYCLE, JOURNAL_DATE, 
+              INV_STATUS, HOLD, GENERIC_GROUP_ID, GROUP_MAP_ID, DUE_AMT, T_PAID_AMT)
+          SELECT 
+              r.ID||'.'||REPORT_MMS_BILLING_SEQ.NEXTVAL,  -- Using sequence directly
+              r.ID, r.OID, r.USERNAME, 
+              m.ID, m.REF_ID, 
+              CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN m.ORGANISATION|| ' - ' ||m.FIRST_NAME || ' ' || m.LAST_NAME||' (Non-Assigned Billing Member)'
+                    WHEN p_app_mms_member_sort = 'FL' THEN m.FIRST_NAME || ' ' || m.LAST_NAME||' (Non-Assigned Billing Member)'
+                    ELSE m.LAST_NAME || ', ' || m.FIRST_NAME||' (Non-Assigned Billing Member)'
+              END || '<BR>' ||
+              CASE 
+                  WHEN r.GENERIC_GROUP_ID IS NULL THEN '(Other Billing Member(s): '||(SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME) "FullName"
+                                                                                          FROM MMS_MEMBER_MASTER B
+                                                                                          WHERE B.OID = p_app_oid
+                                                                                          AND B.MEM_STATUS LIKE 'Active'
+                                                                                          AND B.ID <> m.ID -- don't duplicate current member
+                                                                                          AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X 
+                                                                                                        WHERE X.OID = p_app_oid
+                                                                                                        AND X.GROUP_MAP_ID = r.GROUP_MAP_ID
+                                                                                                        AND X.BILLING_MEMBER = 'Y')
+                                                                                          )||')'
+
+                   ELSE '+'||(SELECT LISTAGG(B.FIRST_NAME||' '||B.LAST_NAME, ', ') WITHIN GROUP (ORDER BY B.FIRST_NAME||' '||B.LAST_NAME) "FullName"
+                                                        FROM MMS_MEMBER_MASTER B
+                                                        WHERE B.OID = p_app_oid
+                                                        AND B.MEM_STATUS LIKE 'Active'
+                                                        AND B.ID <> m.ID -- don't duplicate current member
+                                                        AND B.ID IN (SELECT X.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP X 
+                                                                      WHERE X.OID = p_app_oid
+                                                                      AND X.GROUP_MAP_ID = r.GROUP_MAP_ID)
+                         )                             
+                 END,
+                CASE
+                    WHEN p_app_mms_member_view = 'OL' THEN m.ORGANISATION|| ' - ' ||m.FIRST_NAME || ' ' || m.LAST_NAME
+                    WHEN p_app_mms_member_sort = 'FL' THEN m.FIRST_NAME || ' ' || m.LAST_NAME
+                    ELSE m.LAST_NAME || ', ' || m.FIRST_NAME
+               END,
+              r.MEMID, r.MEM_NAME, r.MEM_MAP_ID, r.MEM_MAP_STATUS, 
+              r.BILLING_CYCLE, r.JOURNAL_DATE, r.INV_STATUS, r.HOLD, r.GENERIC_GROUP_ID, r.GROUP_MAP_ID, r.DUE_AMT, r.T_PAID_AMT
+          FROM REPORT_MMS_BILLING_RPT r
+          JOIN MMS_MEMBER_MASTER m 
+              ON m.OID = r.OID
+              AND m.ID != r.MEMBER_ID  -- Exclude assigned billing member
+          WHERE m.ID IN (
+              SELECT G.MEMBER_ID FROM MMS_MEMBER_GROUP_MAP G
+              WHERE G.OID = r.OID
+              AND G.BILLING_MEMBER = 'Y'
+              AND G.GROUP_MAP_ID IN (
+                  SELECT M.MEMBER_GROUP_MAP_ID 
+                  FROM MMS_MEMBERSHIP_MAP M 
+                  WHERE M.OID = r.OID 
+                  AND M.ID = r.MEM_MAP_ID
+              )
+          )
+          AND r.OID = p_app_oid
+          AND r.USERNAME = p_app_user;
+
+          -- Debugging output
+          DBMS_OUTPUT.PUT_LINE('Bulk Insert Completed.');
+
+          IF p_member_id > 0 THEN 
+            --Remove Other Members rows if a single member is selected.
+            DELETE FROM REPORT_MMS_BILLING_RPT r
+            WHERE r.OID = p_app_oid
+            AND r.USERNAME = p_app_user
+            AND r.MEMBER_ID != p_member_id;
+          END IF;
+
+          IF p_member_id = 0 AND p_source_page NOT IN ('234') THEN 
+            --Remove Non-Assigned Member for Billing Reports (NB - SHOW these in Invoice/Statements p234)
+            DELETE FROM REPORT_MMS_BILLING_RPT r
+            WHERE r.OID = p_app_oid
+            AND r.USERNAME = p_app_user
+            AND r.DUPLICATE_ID IS NOT NULL;
+          END IF;
+
+         IF p_source_page IN ('234') THEN 
+            -- Remove Assigned NON-BILLING Members from Invoice/Statements p234 (Individual Assignments)
+            DELETE FROM REPORT_MMS_BILLING_RPT r
+            WHERE r.OID = p_app_oid
+            AND r.USERNAME = p_app_user
+            AND r.DUPLICATE_ID IS NULL
+            AND r.GROUP_MAP_ID IS NOT NULL
+            AND EXISTS (
+                SELECT 1
+                FROM MMS_MEMBER_GROUP_MAP X
+                WHERE X.OID = p_app_oid
+                AND X.MEMBER_ID = r.MEMBER_ID
+                AND X.BILLING_MEMBER IS NULL
+                AND X.GROUP_MAP_ID = r.GROUP_MAP_ID
+            );
+        END IF;
+
+
+
+     --END IF;
+
+
+  END IF;
+
+
+
+
+--UNALLOCATED / MEMBER BALANCES IF SELECTED (p_include_ua = 'Y)
+
+IF NVL(p_include_ua, 'N') <> 'N' AND p_memid = 0 THEN -- Don't return if excluded or explicit Membership selected.
+
+    INSERT INTO REPORT_MMS_BILLING_RPT (ID, OID, USERNAME, MEMBER_ID, MEM_REF_ID, MEMBER_NAME, MEMID, MEM_NAME, MEM_MAP_ID, MEM_MAP_STATUS, JOURNAL_DATE, INV_STATUS, HOLD, DUE_AMT, T_PAID_AMT)
+      SELECT A.ID, A.OID, p_app_user, A.MEMBER_ID, M.REF_ID,
+             CASE
+               WHEN p_app_mms_member_view = 'OL' THEN M.ORGANISATION || ' - ' || M.FIRST_NAME || ' ' || M.LAST_NAME
+               WHEN p_app_mms_member_sort = 'FL' THEN M.FIRST_NAME || ' ' || M.LAST_NAME
+               ELSE M.LAST_NAME || ', ' || M.FIRST_NAME
+             END AS v_member_name,
+             A.MEMID,
+             CASE 
+                WHEN A.JOURNAL_TYPE = 'Member Balance' THEN 'UNALLOCATED MEMBER BALANCE'
+                WHEN A.SOURCE LIKE '%ACCT_TRNF%' THEN 'UNALLOCATED MEMBER PAYMENT'
+                ELSE 'UNALLOCATED MEMBER PAYMENT'
+               END AS "MEMBERSHIP",   --Membership
+               A.MEM_MAP_ID, 'UNALLOCATED', A.JOURNAL_DATE, A.INV_STATUS, A.HOLD, nvl(A.DUE_AMT,0), nvl(A.PAID_AMT,0)
+      FROM MMS_BILLING_MASTER A
+      JOIN MMS_MEMBER_MASTER M ON (A.MEMBER_ID = M.ID AND M.OID = p_app_oid)
+      WHERE
+        A.OID = p_app_oid
+      AND
+        A.MEMID = 0
+      AND
+        A.PID = 0
+      AND
+        ((NVL(M.SECTION_ID,0) <> 0 AND M.SECTION_ID = p_section_id ) OR (NVL(M.SECTION_ID,0) = 0 AND p_section_id = -1) OR p_section_id = 0)
+      AND
+        (
+          (p_member_id = -1 AND ((p_member_id_N IS NOT NULL AND instr(':' || p_member_id_N || ':'  , ':' || A.MEMBER_ID || ':' ) > 0) OR p_member_id_N = '0'))
+        OR 
+          (p_member_id > 0 AND p_member_id = A.MEMBER_ID)
+        OR
+          p_member_id = 0
+        )
+      AND 
+        ((p_show = 'A' AND M.MEM_STATUS = 'Active') OR (p_show = 'I' AND M.MEM_STATUS = 'Inactive') OR p_show = 'AI')
+      AND
+         A.JOURNAL_DATE <= p_date_to -- Don't return lines later than date range (always include earlier)
+      AND
+         A.DISP_LEVEL IN (2); -- UNALLOCATED IS A PAYMENT    
+ END IF;       
+
+ COMMIT; -- Commit the changes
+
+        DBMS_OUTPUT.PUT_LINE('Billing Report updated successfully.');
+
+        EXCEPTION
+            WHEN OTHERS THEN
+                ROLLBACK; -- Rollback on error
+                DBMS_OUTPUT.PUT_LINE('Error updating Billing Report: ' || SQLERRM); 
+
+END;
