@@ -1,0 +1,859 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Clubtreasurer.com - The All-in-One Treasurer and Membership Solution for clubs, charities and other not-for-profit organisations.</title>
+<meta content="Clubtreasurer provides clubs, charities and not-for-profit organisations with an affordable, easy to use, web-based treasurer and membership solution to allow you to manage and report your cash and finances as well as track all your activities, members and subscriptions." name="description" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="https://clubtreasurer.com/images/CT_favicon.png" type="image/png">
+
+<link rel="stylesheet" href="https://clubtreasurer.com/css/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+  body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
+
+  body, html {
+    height: 100%;
+    line-height: 1.8;
+  }
+
+  /* Full height image header
+  .bgimg-1 {
+    background-position: center;
+    background-size: cover;
+    background-image: url("https://clubtreasurer.com/images/new_site/Home-Banner3.1.png");
+    min-height: 100%;
+    opacity: 1;
+    z-index: 0; /* Ensure its behind
+  }
+  */
+
+  .hero-section {
+    position: relative; Make this the positioning context for absolute children */
+    width: 100%; /* Or your desired width */
+    /* You might set a minimum height here depending on your content */
+    min-height: 100%;
+    overflow: hidden; /* To contain absolutely positioned elements if needed */
+  }
+
+  .background-image {
+  background-position: center;
+  background-size: cover;
+  width: 100%;
+  height: auto; /* Maintain aspect ratio */
+  /**min-height: 100%;*/
+  display: block; /* Remove any default inline spacing */
+  object-fit: cover; /* Ensure the image covers the entire container without distortion */
+  position: absolute; /* Position it absolutely within the hero-section */
+  top: 0;
+  left: 0;
+  z-index: 0; /* Ensure it's behind the logo */
+}
+
+  .logo-image {
+  /*position: absolute; /* Position it absolutely within the hero-section */
+  top: 100%; /* Initial vertical centering */
+  left: 100%; /* Initial horisontal centering */
+  transform: translate(50%,100%); /* Fine-tune centering */
+  z-index: 2; /* Ensure it's on top of the background image */
+  /* Adjust the width and height of your logo as needed */
+  width: 50%;
+  height: auto;
+  }
+
+  .home-buttons {
+  top: 100%; /* Initial vertical centering */
+  left: 100%; /* Initial horisontal centering */
+  transform: translate(50%,80%); /* Fine-tune centering */
+  z-index: 2; /* Ensure it's on top of the background image */
+  /* Adjust the width and height of your logo as needed */
+  width: 50%;
+  height: auto;
+  }
+
+
+  .w3-bar .w3-button {
+    padding: 16px;
+  }
+  .style1 {font-style: italic}
+
+  {
+  scroll-behavior: smooth;
+  }
+</style>
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-937QJHJ2Q9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-937QJHJ2Q9');
+</script>
+
+<body>
+
+<!-- Navbar (sit on top) -->
+<div class="w3-top">
+  <div class="w3-bar w3-white w3-card" id="myNavbar">
+    <a href="#home" class="w3-bar-item w3-button w3-wide"><img height="20" src="https://clubtreasurer.com/images/clubtreasurer-logo.jpg" /></a>
+    <!-- Right-sided navbar links -->
+    <div class="w3-right w3-hide-small">
+      <a href="#about" class="w3-bar-item w3-button">ABOUT</a>
+	  <a href="#features" class="w3-bar-item w3-button"><i class="fa fa-diamond"></i> EXPLORE</a>
+      <a href="#overview" class="w3-bar-item w3-button"><i class="fa fa-th"></i> OVERVIEW</a>
+      <a href="#customers" class="w3-bar-item w3-button"><i class="fa fa-users"></i> CUSTOMERS</a>
+      <a href="#pricing" class="w3-bar-item w3-button"><i class="fa fa-gbp"></i> PRICING</a>
+      <a href="#contact" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i> CONTACT</a>
+      <a href="https://www.facebook.com/profile.php?id=61568276904136" target="_blank" title="Facebook" class="w3-bar-item w3-button w3-text-blue"><i class="fa fa-facebook-official w3-hover-opacity"></i> FACEBOOK</a> 
+	  <a href="https://clubtreasurer.com/blog/community" target="_blank" title="Clubtreasurer Community" class="w3-bar-item w3-button w3-text-blue"><i class="fa fa-user"></i> COMMUNITY</a>   
+	  <a href="https://www.myclubtreasurer.com/apex/f?p=101:1" target="_blank" title="Sign-in to Clubtreasurer - Please clear your browser cache if your are having issues." class="w3-bar-item w3-button w3-text-deep-orange"><i class="fa fa-user"></i> SIGN-IN</a> 
+<!--  
+      swap LOGIN line for temp login message
+  	  <a href="https://clubtreasurer.com/apex/f?p=101:1" target="_blank" title=". Please accept our apologies if you are unable to sign-in." class="w3-bar-item w3-button w3-text-deep-orange"><i class="fa fa-user"></i> SIGN-INx</a>
+-->    
+
+<a href=>
+    </div>
+    <!-- Hide right-floated links on small screens and replace them with a menu icon -->
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
+      <i class="fa fa-bars"></i>
+    </a>
+  </div>
+</div>
+
+<!-- Sidebar on small screens when clicking the menu icon -->
+<nav class="w3-sidebar w3-bar-block w3-black w3-card w3-animate-left w3-hide-medium w3-hide-large" style="display:none" id="mySidebar">
+  <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close �</a>
+  <a href="#about" onclick="w3_close()" class="w3-bar-item w3-button">ABOUT</a>
+  <a href="#features" onclick="w3_close()" class="w3-bar-item w3-button">EXPLORE</a>
+  <a href="#overview" onclick="w3_close()" class="w3-bar-item w3-button">OVERVIEW</a>
+  <a href="#pricing" onclick="w3_close()" class="w3-bar-item w3-button">PRICING</a>
+  <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button">CONTACT</a>
+  <a href="https://www.facebook.com/profile.php?id=61568276904136" target="_blank" title="Facebook" class="w3-bar-item w3-button w3-text-blue"><i class="fa fa-facebook-official w3-hover-opacity"></i> FACEBOOK</a>     
+  <a href="https://clubtreasurer.com/blog/community" target="_blank" title="Clubtreasurer Community" onclick="w3_close()" class="w3-bar-item w3-button w3-text-blue">COMMUNITY</a>
+  <a href="https://www.myclubtreasurer.com/apex/f?p=101:1" target="_blank" title="Sign-in to Clubtreasurer" onclick="w3_close()" class="w3-bar-item w3-button w3-text-deep-orange">SIGN-IN</a>
+  </nav>
+
+
+<!--Header with full-height image -->
+<!--<header class="bgimg-1 w3-display-container" id="home"> -->
+<header id="home">
+  <div class="hero-section">
+     <img class="background-image" src="https://clubtreasurer.com/images/new_site/Home-Banner3.1.png" alt="Background Image Description">
+     <img class="logo-image" src="https://clubtreasurer.com/images/new_site/CT-Banner-Logo-600x150_2.png" alt="Clubtreasurer Logo">
+     </div>
+  <div class="w3-display-left w3-text-black" style="padding:48px">
+        <p><a href="#about" class="w3-button w3-blue w3-hover-shadow w3-margin-top w3-opacity w3-hover-opacity-off">Learn more and start today</a></p>
+        <p><a href="https://myclubtreasurer.com/apex/f?p=101:143" target="_blank"><button class="w3-button w3-deep-orange w3-hover-shadow w3-padding-large">Request a free 30-day Trial Account</button></a></p> 
+  </div>
+  
+  <!--<div class="w3-display-left w3-text-black" style="padding:48px">
+    <p><a href="#about" class="w3-button w3-blue w3-hover-shadow w3-margin-top w3-opacity w3-hover-opacity-off">Learn more and start today</a></p>
+    <p><a href="https://myclubtreasurer.com/apex/f?p=101:143" target="_blank"><button class="w3-button w3-deep-orange w3-hover-shadow w3-padding-large">Request a free 30-day Trial Account</button></a></p>
+  </div>
+-->
+  
+<!-- 
+    <span class="w3-white w3-opacity w3-jumbo w3-hide-small">Welcome to Clubtreasurer</span><br>
+    <span class="w3-white w3-opacity w3-xxlarge w3-hide-large w3-hide-medium">Welcome to Clubtreasurer</span><br>
+    <span class="w3-white w3-opacity w3-large">The All-In-One Treasurer & Membership Solution for Clubs, Charities and Not-for-Profit Organisations - Everything you need to manage and grow, all in one place!</span>   
+
+  <div class="w3-display-bottomleft w3-text-white w3-large" style="padding:24px 48px">
+    <i class="fa fa-facebook-official w3-hover-opacity"></i>
+    <i class="fa fa-instagram w3-hover-opacity"></i>
+    <i class="fa fa-snapchat w3-hover-opacity"></i>
+    <i class="fa fa-pinterest-p w3-hover-opacity"></i>
+    <i class="fa fa-twitter w3-hover-opacity"></i>
+    <i class="fa fa-linkedin w3-hover-opacity"></i>
+  </div>
+-->
+</header>
+
+<!-- About Section -->
+
+<div class="w3-container" style="padding:128px 16px" id="about">
+  <h3 class="w3-center">ABOUT CLUBTREASURER</h3>
+  <p class="w3-center w3-large"></p>
+  <div class="w3-row-padding w3-center" style="margin-top:64px">
+    <div class="w3-quarter">
+      <i class="fa fa-question-circle w3-text-deep-orange w3-margin-bottom w3-jumbo w3-center"></i>
+      <p class="w3-large">What is Clubtreasurer?</p>
+      <p>Clubtreasurer provides clubs and charities and other not-for-profit organisations like yours with an easy to use, low cost treasurer and membership system to allow you to manage and report your income & expenditure cashflows and account balances, track budgets, funds and activities, as well as keeping control of your members and membership subscriptions.</p>
+    </div>
+    <div class="w3-quarter">
+      <i class="fa fa-users w3-text-blue w3-margin-bottom w3-jumbo w3-center"></i>
+      <p class="w3-large">Who is Clubtreasurer for?</p>
+      <p>Clubtreasurer is aimed at anyone involved in the management of clubs, small charities and NFPs; such as treasurers, bookkeepers, accountants, membership officers and secretaries. Clubtreasurer is designed to be easy to use and is based around simple receipt & payment cash accounting which smaller organisations require (athough we can get more sophisticated when your organisation grows!)</p>
+    </div>
+    <div class="w3-quarter">
+      <i class="fa fa-desktop w3-text-black w3-margin-bottom w3-jumbo w3-center"></i>
+      <p class="w3-large">How do I use Clubtreasurer?</p>
+      <p>Clubtreasurer is a fully cloud-based web application and requires no software to be downloaded or installed - you simply access it via a modern desktop browser, tablet or smartphone. 
+         Clubtreasurer is safe and reliable, requires no system management, software installations or upgrades. 
+         Your subscription also includes additional users so you can allow other members or colleagues to securely access your accounts and membership details - which is great news for the Chairman, Secretary or even your Auditor! </p>
+    </div>
+    <div class="w3-quarter">
+      <i class="fa fa-life-ring w3-text-red w3-margin-bottom w3-jumbo w3-center"></i>
+      <p class="w3-large">Help - I'm not an Accountant!!</p>
+      <p>Don't worry! Clubtreasurer is very easy to use - even if you don't have any accounting knowledge. 
+         Start by recording simple receipt and payment transactions and adopt other features as your confidence grows. 
+         Make use of the comprehesive library of pre-built reports which you can use 'right out of the box', plus a ton of help pages and tutorials as well our ticketing Support system, 
+         which all help to make learning to use Clubtreasurer as simple as possible. </p>
+    </div>
+</div>
+
+<!-- Explore Section -->
+<div class="w3-container w3-light-grey" style="padding:128px 16px" id="features"> 
+  <h3 class="w3-center">EXPLORE</h3>
+  <p class="w3-center w3-large">How We Make Club Management Simple</p>
+  
+  <div class="w3-row-padding">
+   <!--<div class="w3-col m6">-->
+      <h2>Control Your Cash</h2>
+      <p>Effective financial management in any organisation starts with a clear and accurate view of cash flow and account balances. With <strong>Clubtreasurer</strong>, you can easily monitor and manage all types of financial accounts: bank accounts, savings, investments, on-line payment systems, credit cards, and cash holdings.</p>
+      <p>Track all cash payments and receipts, as well as transfers between accounts, to maintain a complete and organised record.</p>
+      <p>Regular bank reconciliations ensure that your balances are accurate and match your bank statements. Once reconciled, transactions are locked to prevent accidental adjustments.</p>
+      <p>Although <strong>Clubtreasurer</strong> is designed around cash accounting, it also supports tracking of non-cash items, including debtors, creditors, accruals & prepayments, long-term loans, stock balances, and fixed assets.</p>
+      <p>With <strong>Clubtreasurer</strong>, you can:</p>
+      <ul>
+          <li>Define and manage all your bank and cash accounts</li>
+          <li>Report on cash flows, account activity, and period-end balances</li>
+          <li>Reconcile accounts with bank statements</li>
+      </ul>
+	    <div align="center"><img src="https://clubtreasurer.com/images/Features/Account_Balances4.png" alt="Account Balances" onclick="onClick(this)"  width = "80%" class="w3-image w3-round-large w3-hover-shadow">
+       </div>
+    </div>
+    
+    <div class="w3-row-padding" style="padding:50px 16px"> 
+    <!--<div class="w3-col m6">-->
+      <br>
+      <h2>Manage Your Activities and Events</h2>
+      <p>For most clubs and charities, organising events is a core activity. Whether you’re planning the Over-50s Rugby tour, hosting the annual Summer Ball or coordinating a major fundraising event, it’s essential to clearly understand the costs and revenue generated by these activities, along with all your other organisation events.</p>
+      <p>Likewise, it’s important to record, analyse, and report income and expenses across your various activity categories, such as <em>"membership receipts"</em> or <em>"food and drink expenses"</em>.</p>
+      <p>You can also take advantage of these features to track income and expenses for specific projects, products or services.</p>
+      <p>With Clubtreasurer's intuitive design, you can efficiently manage all incomes and expenses related to events and activities and report the critical surpluses (or deficits!).</p>
+      <ul>
+          <li>Track transactions against customisable activity structures ("Cost Codes") and events</li>
+          <li>Easily monitor sales, income categories, direct costs, and overheads</li>
+          <li>Report event surpluses or deficits and compare results across years or similar events</li>
+      </ul>
+	    <div align="center"><img src="https://clubtreasurer.com/images/Features/Event_Balances2.png" alt="Event Balances" onclick="onClick(this)"  width = "80%" class="w3-image w3-round-large w3-hover-shadow" >
+      </div>
+  </div>
+  
+  <div class="w3-row-padding" style="padding:50px 16px"> 
+    <!--<div class="w3-col m6">-->
+      <h2>Fund-Based Accounting</h2>
+      <p>Beyond managing cash and bank accounts, Clubtreasurer enables you to allocate cash into distinct “funding pools” to control spending effectively. These funds help you track fundraising targets, set budgets, or earmark money for specific goals—like “Club Building Restoration” or adhering to a donor's stipulation for restricted use.</p>
+      <p>Fund accounting is especially essential for charities needing to report finances by different funds and categories (such as 'Restricted' or 'Designated'). Clubtreasurer offers a range of pre-built reports, such as "CC16", making it easy to generate detailed layouts in the correct format.</p>
+      <ul>
+        <li><strong>Report and manage all fund balances</strong></li>
+        <li><strong>Track income and expenses by fund and funding category</strong></li>
+        <li><strong>Effortlessly report on activities by fund and funding category</strong></li>
+      </ul>
+      <div align="center"><img src="https://clubtreasurer.com/images/Features/Fund_Balances3.png" alt="Fund Balances" onclick="onClick(this)" width = "80%"​ class="w3-image w3-round-large w3-hover-shadow" >
+      </div>
+	    <!--<p><a href="#work" class="w3-button w3-black"><i class="fa fa-th">�</i> View Our Works</a></p>  -->
+  </div>
+  
+  <div class="w3-row-padding" style="padding:50px 16px"> 
+     <!--<div class="w3-col m6">-->
+      <h2>Planning and Budgeting</h2>
+      <p>After defining expenditure, revenue budgets, and financial goals, a crucial aspect of managing a club's or charity’s finances is ensuring that actual spending and revenues align with these budgets, helping you achieve your targets.</p>
+      <p>Clubtreasurer allows you to create multiple budgets and versions to allocate planned income and expenses. You can then report actual invoices and expenditures against the budgeted values. Budgets can be created as simple summaries or detailed down to specific cost codes, funds or events, as needed.</p>
+      <ul>
+          <li>Define your organisation’s budgets by activity, event or fund.</li>
+          <li>Create and compare multiple budgets and budget versions.</li>
+          <li>Track and report actual income and expenses against budgets.</li>
+      </ul>
+      
+      <div align="center"><img src="https://clubtreasurer.com/images/Features/Budget3.png" alt="Budget Reports" onclick="onClick(this)" width = "80%"  class="w3-image w3-round-large w3-hover-shadow" >
+      </div>
+  </div>
+  
+  <div class="w3-row-padding" style="padding:50px 16px">
+     <!--<div class="w3-col m6">-->
+      <h2>Members & Memberships</h2>
+      <p>Our Membership feature enables your organisation to manage its members, memberships, and subscription payments seamlessly within Clubtreasurer.</p>
+      <p>With Clubtreasurer you can securely store your member database, eliminating the need for separate spreadsheets or paper records. The flexible Membership system allows you to set up your unique membership structures and define membership items such as annual dues, joining fees, one-off payment items, and much more. By assigning these to your members, you can easily monitor payments and outstanding balances for the entire membership, individual sections, or specific members—giving you clear oversight of who has paid, who hasn’t and balances due.</p>
+      <ul>
+          <li>Securely store all your member details within Clubtreasurer</li>
+          <li>Customise your memberships and create individual member payment plans</li>
+          <li>Record subscription payments and track member balances directly in Clubtreasurer</li>
+          <li>Create and email membership invoices and statements directly to members</li>
+      </ul>
+      
+     <div align="center"><img src="https://clubtreasurer.com/images/Features/Members2.png" alt="Member Card View" onclick="onClick(this)" width = "80%" class="w3-image w3-round-large w3-hover-shadow" >
+     </div>
+     <br>
+	   <div align="center"><img src="https://clubtreasurer.com/images/Features/MembersPaymentPlan.png" alt="Payment Plan" onclick="onClick(this)"  width = "80%" class="w3-image w3-round-large w3-hover-shadow" >
+     </div>
+  </div>
+  
+  <div class="w3-row-padding" style="padding:50px 16px">
+      <!--<div class="w3-col m6">-->
+      <h2>Full Library of Reports</h2>
+      <p>Clubtreasurer provides a comprehensive library of reports, allowing you to analyse every aspect of your organisation’s activities with ease.</p>
+      <p>Each report offers simple date controls and filters, so you can quickly retrieve the data you need. When it’s time to prepare your accounts, you can easily export reports in various formats, including PDF and CSV.</p>
+      <ul>
+          <li>Detailed Transaction Reports</li>
+          <li>Account and Cashflow Reports</li>
+          <li>Reconcilation Reports</li>
+          <li>Budget Reports</li>
+          <li>Stock and Asset Reports</li>
+          <li>Cost Code Reports</li>
+          <li>Event & Fund Reports</li>
+          <li>Fixed Asset Reports</li>
+          <li>Financial Statements (Profit & Loss / Balance Sheet)</li>
+          <li>Charity Reports (Fund layouts)</li>
+          <li>Member and Membership Reports</li>
+      </ul>
+
+	     <div align="center"><img src="https://clubtreasurer.com/images/Features/P&Lreport3.png" alt="Profit & Loss Report" width = "800" onclick="onClick(this)"  class="w3-image w3-round-large w3-hover-shadow" >
+      </div>
+	  <!--	  <p><a href="#work" class="w3-button w3-black"><i class="fa fa-th">�</i> View Our Works</a></p>  -->
+    </div>
+  </div>
+
+ <!-- original template layout 
+ 
+<div class="w3-row-padding w3-white">
+    <div class="w3-col m6">
+      <h3>Planning and Budgeting</h3>
+      <p>Once expenditure &amp; revenue budgets and financial goals are identified, a key part of the management of a club or charitys' finances is to ensure that actual expenditure and revenues are aligned with your budgets, and that cash is ear-marked and protected against your specfic funds. </p>
+  <p>Clubtreasurer allows you to create any number of budgets and funds against which you can allocate specific income and expenditure to help you reach your targets. </p>
+      <ul>
+        <li>Define your organisation's budgets by activity, event or fund.</li>
+        <li>Create any number of budgets and budget versions and compare to each other.</li>
+        <li>Track and report actual income and expenditure against budgets. </li>
+      </ul>
+      <!--	  <p><a href="#work" class="w3-button w3-black"><i class="fa fa-th">�</i> View Our Works</a></p> 
+    </div>
+    <div class="w3-col m6" >  <img src="https://clubtreasurer.com/images/Features/budget.png" alt="Budget Reports" width="700" border="1" align="middle" class="w3-image w3-round-large" ></div>
+</div>
+-->
+
+
+<!-- Promo Section "Statistics" -->
+<!--
+</em>
+<div class="w3-container w3-row w3-center w3-dark-grey w3-padding-64">
+  <div class="w3-quarter">
+ <!--
+    <span class="w3-xxlarge">14+</span>
+    <br>
+    Partners
+  </div>
+  <div class="w3-quarter">
+    <span class="w3-xxlarge">55+</span>
+    <br>Projects Done
+  </div>
+  <div class="w3-quarter">
+    <span class="w3-xxlarge">89+</span>
+    <br>Happy Clients
+  </div>
+  <div class="w3-quarter">
+    <span class="w3-xxlarge">150+</span>
+    <br>Meetings
+  </div>
+</div>
+-->
+
+<!-- Overview Section -->
+<div class="w3-container w3-dark-grey w3-padding-128" style="padding:128px 16px" id="overview">
+ <h3 class="w3-center">OVERVIEW</h3>
+ <p class="w3-center w3-large"> </p>
+   <div class="w3-row-padding">
+    <div class="w3-col m6">
+      <h3>Take a look.</h3>
+      <p>Click the image opposite to see a quick overview of Clubtreasurer.<br>
+      <p>If you want to try us you can sign up for a free 30-day Trial Account. See the Pricing section below for more details.</p>
+	   <a href="https://clubtreasurer.com/apex/f?p=101:143" target="_blank"><button class="w3-button w3-hover-shadow w3-black w3-padding-large">Request a free 30-day Trial Account</button></a>
+    </div>
+<!--BAR CODES
+    <div class="w3-col m6">
+      <p class="w3-wide"><i class="fa fa-camera w3-margin-right"></i>Photography</p>
+      <div class="w3-grey">
+        <div class="w3-container w3-dark-grey w3-center" style="width:90%">90%</div>
+      </div>
+      <p class="w3-wide"><i class="fa fa-desktop w3-margin-right"></i>Web Design</p>
+      <div class="w3-grey">
+        <div class="w3-container w3-dark-grey w3-center" style="width:85%">85%</div>
+      </div>
+      <p class="w3-wide"><i class="fa fa-photo w3-margin-right"></i>Photoshop</p>
+      <div class="w3-grey">
+        <div class="w3-container w3-dark-grey w3-center" style="width:75%">75%</div>
+      </div>
+    </div>
+ -->
+   <div class="w3-col m6">
+    <div onclick="this.nextElementSibling.style.display='block'; this.style.display='none'">
+      <img src="https://clubtreasurer.com/images/Features/Home.jpg" alt="Event Balances" width="800" class="w3-image w3-round-large w3-hover-opacity" style="cursor:pointer" /></div>
+<div style="display:none">
+    <iframe width="800" height="500" src="https://www.youtube.com/embed/uBuWtls4pNs?" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+  </div>
+</div>
+<div class="w3-container w3-dark-grey w3-padding-64">
+</div>
+
+<!-- Customer Testimonials -->
+<div class="w3-container w3-white" style="padding:128px 16px" id="customers">
+  <h3 class="w3-center">CUSTOMERS</h3>
+  <p class="w3-center w3-large">A Selection of Customer Testimonials</p>
+  <div class="w3-row-padding" style="margin-top:64px">
+    <div class="w3-col l3 m1 w3-margin-bottom">
+      <div class="w3-card">
+ <!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Community Centre</h3>
+          <p class="w3-opacity style1"> <em>"Thank you for this brilliant system too. It's very exciting, using a new system that seems to do everything we need it to do for our accounts - particularly the reporting, and the way it can break everything down into cost centres and cost codes etc. Brilliant stuff." </em></p>
+          <p> </p>
+        </div>
+      </div>
+    </div>
+	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Scout Group</h3>
+          <p class="w3-opacity style1"> <em>" I'd go so far as to say the easy to use tools provided in the Clubtreasurer platform have empowered our volunteers; the easy to use reports and graphs make it easy to see what funds are expected, available and spent and the considered approach to the design of the package give confidence in those numbers."  </em></p>
+        </div>
+      </div>
+    </div>
+	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Football Club</h3>
+          <p class="w3-opacity style1"> <em>"Your software has been a pleasure to use - very straightforward, reliable and effective. It has made the management of club accounts so much easier."  </em></p>
+         <p> </p>
+		</div>
+      </div>
+    </div>
+    <div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Bowls Club </h3>
+          <p class="w3-opacity style1"><em>"I am getting used to using Clubtreasurer and decided to set up an event. This event spans two financial years, so I was interested to see how the software dealt with this. I have to say that I am extremely impressed at the way in which this is handled - brilliant multi-year event reports while maintaining current year profit and loss - really useful and unique in my experience of account packages. Thank you so much for this excellent package. Worth every penny."</em></p>
+          <p> </p>
+        </div>
+      </div>
+    </div>
+    <div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+ <!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Community Centre</h3>
+          <p class="w3-opacity style1"> <em>"I'm sure a lot of other organisations would happily pay double or more for this type of facility - we certainly would as your software is an absolute godsend!" </em></p>
+          <p> </p>
+        </div>
+      </div>
+    </div>
+ 	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Angling Club</h3>
+          <p class="w3-opacity style1"> <em>"I just love Clubtreasurer.com - I am completely and easily in control of my angling club's finances at all times and able to produce accurate and up-to-date finance reports immediately. Keep up the great work!" </em></p>
+        </div>
+      </div>
+    </div>
+	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Community Charity</h3>
+          <p class="w3-opacity style1"> <em>"As a busy small charity with lots of little funding pots your software has enabled us to keep a close track on everything day by day. Just thought we would send you our heartfelt thanks and recommendations to any organisation working with restricted funds in the voluntary sector."  </em></p>
+        </div>
+      </div>
+    </div>
+	
+    <div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Rotary Club</h3>
+          <p class="w3-opacity style1"> <em>"Great product that I have come to understand and use with ease"  </em></p>
+        </div>
+      </div>
+    </div>
+	
+	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+<!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Theatre Group</h3>
+          <p class="w3-opacity style1"> <em>"Loving this accounting tool....have replaced old excel spreadsheet based system = so good!"  </em></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+    <!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Athletics Club</h3>
+          <p class="w3-opacity style1"><em>"Would also just like to take the opportunity to thank you guys for an excellent tool and great support. When I took on the role I had no accounting records (Im not entirely sure what my predecessors did!) but the use of ClubTreasurer has been a life saver and as my data has built up and your development of the software has evolved it has helped shape our decisions at the club. So thanks!" </em></p>
+         <p> </p>
+		</div>
+      </div>
+    </div>
+	<div class="w3-col l3 m6 w3-margin-bottom">
+      <div class="w3-card">
+    <!--        <img src="/w3images/team4.jpg" alt="Dan" style="width:100%">  -->
+        <div class="w3-container w3-light-grey w3-hover-shadow">
+          <h3>Scout Group</h3>
+          <p class="w3-opacity style1"><em>"I am sure we are using just a fraction of Club Treasurer but I am very pleased with it and have been recommending to other Scout groups as much as possible." </em></p>
+         <p> </p>
+		</div>
+      </div>
+    </div>
+	
+	
+	
+	
+  </div>
+</div>
+
+
+
+<!-- Work Section 
+<div class="w3-container" style="padding:128px 16px" id="work">
+  <h3 class="w3-center">OUR WORK</h3>
+  <p class="w3-center w3-large">What we've done for people</p>
+
+  <div class="w3-row-padding" style="margin-top:64px">
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_mic.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A microphone">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_phone.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A phone">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_drone.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A drone">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_sound.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="Soundbox">
+    </div>
+  </div>
+
+  <div class="w3-row-padding w3-section">
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_tablet.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A tablet">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_camera.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A camera">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_typewriter.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A typewriter">
+    </div>
+    <div class="w3-col l3 m6">
+      <img src="/w3images/tech_tableturner.jpg" style="width:100%" onclick="onClick(this)" class="w3-hover-opacity" alt="A tableturner">
+    </div>
+  </div>
+</div>
+-->
+
+<!-- Modal for full size images on click-->
+<div id="modal01" class="w3-modal w3-black" onclick="this.style.display='none'">
+  <span class="w3-button w3-xxlarge w3-black w3-padding-large w3-display-topright" title="Close Modal Image">�</span>
+  <div class="w3-modal-content w3-animate-zoom w3-center w3-transparent w3-padding-64">
+    <img id="img01" class="w3-image">
+    <p id="caption" class="w3-opacity w3-large"></p>
+  </div>
+</div>
+
+
+<!-- Pricing Section -->
+<div class="w3-container w3-center w3-dark-grey" style="padding:128px 16px" id="pricing">
+  <h3>PRICING</h3>
+  <p class="w3-large">Choose one of our core Pricing Plans that fits your needs and select optional Add-on features below</p>
+<!--  
+  <div class="w3-row-padding" style="margin-top:64px">
+    <div class="w3-third w3-section">
+      <ul class="w3-ul w3-white w3-hover-shadow">
+        <li class="w3-black w3-xlarge w3-padding-32">Basic</li>
+        <li class="w3-padding-16"><b>Unlimited</b> Transactions</li>
+        <li class="w3-padding-16"><b>1</b> Cash/Bank Account</li>
+        <li class="w3-padding-16"><b>1</b> Event</li>
+        <li class="w3-padding-16"><b>1</b> Fund</li>
+        <li class="w3-padding-16">
+          <h2 class="w3-wide">� 15</h2>
+          <span class="w3-opacity">per annum</span>
+        </li>
+        <li class="w3-light-grey w3-padding-24">
+          <button class="w3-button w3-black w3-padding-large">Sign Up</button>
+        </li>
+      </ul>
+    </div>
+	-->
+    <div class="w3-half">
+      <ul class="w3-ul w3-white">
+        <li class="w3-deep-orange w3-xlarge w3-padding-32">Premium</li>
+		<li class="w3-padding-6"><b>Single</b> Organisation Account</li>
+		<li class="w3-padding-6"><b>3 x</b> User Accounts</li>
+    <!--<li class="w3-padding-6"><strong>50 </strong>Members*</li> 2022 Removed included Members--> 
+		<li class="w3-padding-6"><b>Unlimited</b> Transactions</li>
+        <li class="w3-padding-6"><b>Unlimited</b> Cash/Bank Accounts</li>
+        <li class="w3-padding-6"><b>Unlimited</b> Funds</li>
+		<li class="w3-padding-6"><b>Unlimited</b> Cost Codes</li>
+		<li class="w3-padding-6"><b>Unlimited</b> Events</li>
+    <li class="w3-padding-6"><b>Import</b> Bank Transactions</li>
+		<li class="w3-padding-6"><b>Full Library</b> Pre-built Reports</li>
+        <li class="w3-padding-6"><b>Online</b> Help & Support</li>
+        <li class="w3-padding-6 w3-text-deep-orange" >
+          <h2 class="w3-wide">£7</h2>
+		  <span><b></b>per month*</b></span><br>
+          <span class="w3-opacity w3-text-black">*Billed annually. Monthly plans also available.</span></li>
+      </ul>
+    </div>
+	
+	 <div class="w3-half">
+      <ul class="w3-ul w3-white w3-card">
+        <li class="w3-black w3-xlarge w3-padding-32">Premium Plus</li>
+		<li class="w3-padding-6"><b><i>Includes all Premium features </b>plus</i></li>
+		<li class="w3-padding-6"><b>5 x</b> User Accounts</li>
+		<!--<li class="w3-padding-6"><strong>100 </strong>Members**</li> 2022 Removed included Members -->
+    <li class="w3-padding-6"><b>+ </b>Budgeting</li>
+    <li class="w3-padding-6"><b>+ </b>Stock Accounting</li>	
+    <li class="w3-padding-6"><b>+ </b>Fixed Assets</li>
+    <li class="w3-padding-6"><b>+ </b>VAT Accounting</li>
+    <li class="w3-padding-6"><b>+ </b>Advanced Accruals & Prepayments</li>
+	<li class="w3-padding-6"><b>+ </b>Mass Transaction Changes</li>
+    <li class="w3-padding-6"><b>+ </b>Mass Transaction Delete</li>
+    <li class="w3-padding-6"><b>+ </b>Advanced Report Layouts</li>
+        
+        <li class="w3-padding-6">
+	      <h2 class="w3-wide">£9</h2>
+		  <span><b></b>per month*</b></span><br>
+          <span class="w3-opacity">*Billed annually. Monthly plans also available.</span></li>
+       </ul>
+	  </div>
+	  	<div>
+    	<span>  </span>
+	  </div>
+   
+   <!--
+	 <div>
+	    <ul class="w3-ul w3-white">
+        <li class="w3-light-grey w3-padding-24">
+         <a href="https://myclubtreasurer.com/apex/f?p=101:143" target="_blank"><button class="w3-button w3-deep-orange  w3-padding-large">Request a free 30-day Trial Account</button></a></li>
+	 </ul>
+	</div> 
+
+	<div>
+    	<span>  </span>
+	</div>
+-->
+	  <div class="w3-col">
+       <ul class="w3-ul w3-white">
+	     </ul>
+	   <ul class="w3-ul w3-white w3-card"> 
+	     <li class="w3-dark-grey w3-xlarge w3-padding-32">Add-on features*</li>
+	   <div class="w3-col">
+	     <ul class="w3-ul w3-white w3-card">
+	      <li class="w3-blue w3-xlarge w3-padding-6"><b>Membership bundles</b></li>
+        <li class="w3-padding-6">Manage your organisation's members, memberships and subscription billing & payments directly within Clubtreasurer. The Membership feature is tightly integrated with Clubtreasurer's core accounting functions
+         and we provide flexible pricing options to suit any organisational size. Just add one of our Membership bundles below to your Premium/Premium Plus plan*:</li>
+		   </ul>	
+     </div>
+
+	 <div class="w3-quarter">
+      <ul class="w3-ul w3-white">
+        <li class="w3-light-grey w3-large w3-padding-16">100 Members</li>
+          <h2 class="w3-wide">+£2</h2>
+		  <span class=" w3-opacity"> </span>
+		  <span><b></b>additional per month</b></span><br>
+          <span class="w3-opacity">Billed annually</span>
+		  </li>
+       </ul>
+   </div>
+	 
+    <div class="w3-quarter">
+          <ul class="w3-ul w3-white w3-card2">
+            <li class="w3-light-grey w3-large w3-padding-16">250 Members</li>
+            <h2 class="w3-wide">+£4.50</h2>
+          <span><b></b>additional per month</b></span><br>
+              <span class="w3-opacity">Billed annually</span></li>
+          </ul>
+     </div>
+ 	  
+     <div class="w3-quarter">
+        <ul class="w3-ul w3-white w3-card2">
+          <li class="w3-light-grey w3-large w3-padding-16">500 Members</li>
+          <h2 class="w3-wide">+£8</h2>
+        <span><b></b>additional per month</b></span><br>
+            <span class="w3-opacity">Billed annually</span></li>
+        </ul>
+     </div>
+
+    
+	   <div class="w3-quarter">
+        <ul class="w3-ul w3-white ">
+          <li class="w3-light-grey w3-large w3-padding-16">1000 | 2000 Members</li>
+          <h2 class="w3-wide">+£13 | +£20</h2>
+        <span><b></b>additional per month</b></span><br>
+            <span class="w3-opacity">Billed annually</span></li>
+        </ul>
+     </div>
+	  
+     <!--
+     <div class="w3-quarter">
+      <ul class="w3-ul w3-white">
+        <li class="w3-light-grey w3-large w3-padding-16">2000 Members</li>
+          <h2 class="w3-wide">+£20</h2>
+		  <span class=" w3-opacity"> </span>
+		  <span><b></b>additional per month</b></span><br>
+          <span class="w3-opacity">Billed annually</span>
+		  </li>
+       </ul>
+     </div>
+	 
+    
+    <div class="w3-quarter">
+          <ul class="w3-ul w3-white w3-card2">
+            <li class="w3-light-grey w3-large w3-padding-16">900 Members</li>
+            <h2 class="w3-wide">+£11</h2>
+          <span><b></b>additional per month</b></span><br>
+              <span class="w3-opacity">Billed annually</span></li>
+          </ul>
+     </div>
+ 	  
+     <div class="w3-quarter">
+        <ul class="w3-ul w3-white w3-card2">
+          <li class="w3-light-grey w3-large w3-padding-16">1100 Members</li>
+          <h2 class="w3-wide">+£13</h2>
+        <span><b></b>additional per month</b></span><br>
+            <span class="w3-opacity">Billed annually</span></li>
+        </ul>
+     </div>
+
+    
+	   <div class="w3-quarter">
+        <ul class="w3-ul w3-white ">
+          <li class="w3-light-grey w3-large w3-padding-16">1300 Members</li>
+          <h2 class="w3-wide">+£15</h2>
+        <span><b></b>additional per month</b></span><br>
+            <span class="w3-opacity">Billed annually<br></span></li>
+        </ul>
+     </div>
+     -->
+
+     <div class="w3-col">
+      <ul class="w3-ul w3-white w3-card">  
+       <li class="w3-padding-6"><br>*Please contact us if you require pricing for larger Membership bundles.</li>
+      </ul>	
+    </div>
+
+	 
+
+     <div>  
+      <li class="w3-xlarge w3-padding-6"> </li>
+      <ul class="w3-ul w3-white w3-card"></ul>
+      <li class="w3-dark-grey w3-xlarge w3-padding-6"><b><br>Premium/Premium Plus Enterprise</b></li>
+      <li class="w3-padding-6">Our <b>Enterprise</b> option provides discounts for purchasing multiple organisation Accounts, starting from <b>10%</b> per year for 2 x Accounts. Please contact us for details on all multiple Account discounts.</li>
+    </div> 
+  
+    <li class="w3-dark-grey w3-xlarge w3-padding-6"><b>Additional User Accounts</b></li>
+      <li class="w3-padding-6">Your Pricing Plan includes 3 or 5 Users Accounts. If required, additional User Accounts can be purchased at <b>£2 per month</b>. Please contact us to enquire about adding additional User Accounts.</li>
+      <li class="w3-white w3-padding-6"><i><b>*Add-on features can be purchased at any time with an active Premium/Premium Plus plan and will be prorated with the remaining time on your current annual subscription.</b></i></li>
+      <!--<li class="w3-padding-6"> -->
+		</ul>	
+    </div>
+	<div>
+    	<span>  </span>
+	</div>
+	<div>
+	 <ul class="w3-ul w3-white">
+        <li class="w3-light-grey w3-padding-24">
+         <a href="https://myclubtreasurer.com/apex/f?p=101:143" target="_blank"><button class="w3-button w3-hover-shadow w3-deep-orange  w3-padding-large">Request a free 30-day Trial Account</button></a></li>
+	 </ul>
+	</div>   
+</div>
+
+
+<!-- Contact Section -->
+<div class="w3-container w3-light-grey" style="padding:128px 16px" id="contact">
+  <h3 class="w3-center">CONTACT</h3>
+  <p class="w3-center w3-large">Any questions? Please contact us:</p>
+  <p class="w3-center w3-large"><i class="fa fa-envelope fa-fw w3-xxlarge w3-margin-right"> </i>
+    <a href="mailto:info@clubtreasurer.com?Subject=Clubtreasurer.com%20enquiry" target="_top">info@clubtreasurer.com</a></p>
+
+<!--
+  <div style="margin-top:48px">
+    <p><i class="fa fa-map-marker fa-fw w3-xxlarge w3-margin-right"></i> Chicago, US</p>
+    <p><i class="fa fa-phone fa-fw w3-xxlarge w3-margin-right"></i> Phone: +00 151515</p>
+    <p><i class="fa fa-envelope fa-fw w3-xxlarge w3-margin-right"></i> <a href="mailto:info@clubtreasurer.com?Subject=Clubtreasurer.com%20enquiry" target="_top">info@clubtreasurer.com</a></p>
+    <br>
+    <form action="/action_page.php" target="_blank">
+      <p><input class="w3-input w3-border" type="text" placeholder="Name" required name="Name"></p>
+      <p><input class="w3-input w3-border" type="text" placeholder="Email" required name="Email"></p>
+      <p><input class="w3-input w3-border" type="text" placeholder="Subject" required name="Subject"></p>
+      <p><input class="w3-input w3-border" type="text" placeholder="Message" required name="Message"></p>
+      <p>
+        <button class="w3-button w3-black" type="submit">
+          <i class="fa fa-paper-plane"></i> SEND MESSAGE
+        </button>
+      </p>
+    </form>
+    <!-- Image of location/map 
+    <img src="/w3images/map.jpg" class="w3-image w3-greyscale" style="width:100%;margin-top:48px"> -->
+  </div>
+</div>
+-->
+
+<!-- Footer -->
+<footer class="w3-center w3-black w3-padding-64">
+  <a href="#home" class="w3-button w3-light-grey"><i class="fa fa-arrow-up w3-margin-right"></i>To the top</a>
+  <div class="w3-xlarge w3-section">
+ <p>&copy; Clubtreasurer.com 2025 | <a href="terms.htm">Terms &amp; Conditions of Use</a> | <a href="privacy.htm">Privacy Policy</a></p>
+<!--
+    <i class="fa fa-facebook-official w3-hover-opacity"></i>
+    <i class="fa fa-instagram w3-hover-opacity"></i>
+    <i class="fa fa-snapchat w3-hover-opacity"></i>
+    <i class="fa fa-pinterest-p w3-hover-opacity"></i>
+    <i class="fa fa-twitter w3-hover-opacity"></i>
+    <i class="fa fa-linkedin w3-hover-opacity"></i>
+	-->
+  </div>
+</footer>
+ 
+ 
+ 
+<script>
+// Modal Image Gallery
+function onClick(element) {
+  document.getElementById("img01").src = element.src;
+  document.getElementById("modal01").style.display = "block";
+  var captionText = document.getElementById("caption");
+  captionText.innerHTML = element.alt;
+}
+
+
+// Toggle between showing and hiding the sidebar when clicking the menu icon
+var mySidebar = document.getElementById("mySidebar");
+
+function w3_open() {
+  if (mySidebar.style.display === 'block') {
+    mySidebar.style.display = 'none';
+  } else {
+    mySidebar.style.display = 'block';
+  }
+}
+
+// Close the sidebar with the close button
+function w3_close() {
+    mySidebar.style.display = "none";
+}
+</script>
+
+</body>
+</html>
